@@ -1,3 +1,5 @@
+"Core metrics functions to evaluate the simulations and projections "
+
 def check_density(density, epsilon=1e-5) :
     """
     args :
