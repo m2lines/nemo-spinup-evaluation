@@ -1,3 +1,5 @@
+"Helper functions for running the metrics functions"
+
 def get_deptht(restart, mask):
     """
     Calculate the depth of each vertical level on grid T in the 3D grid.
