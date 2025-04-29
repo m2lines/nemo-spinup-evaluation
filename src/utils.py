@@ -1,5 +1,6 @@
 "Helper functions for running the metrics functions"
 
+
 def get_deptht(restart, mask):
     """
     Calculate the depth of each vertical level on grid T in the 3D grid.
@@ -12,9 +13,15 @@ def get_deptht(restart, mask):
         deptht (numpy.array) : The depth of each vertical level.
     """
     ssh = restart.sshn.squeeze()
-    e3w_0 = mask.e3w_0.squeeze()  # initial z axis cell's thickness on grid W - (t,z,y,x)
-    e3t_0 = mask.e3t_0.squeeze()  # initial z axis cell's thickness on grid T - (t,z,y,x)
-    tmask = mask.tmask.squeeze()  # grid T continent mask                     - (t,z,y,x)
+    e3w_0 = (
+        mask.e3w_0.squeeze()
+    )  # initial z axis cell's thickness on grid W - (t,z,y,x)
+    e3t_0 = (
+        mask.e3t_0.squeeze()
+    )  # initial z axis cell's thickness on grid T - (t,z,y,x)
+    tmask = (
+        mask.tmask.squeeze()
+    )  # grid T continent mask                     - (t,z,y,x)
     ssmask = tmask[:, 0]  # bathymetry                                - (t,y,x)
     bathy = e3t_0.sum(
         dim="depth"
