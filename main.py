@@ -2,38 +2,47 @@
 
 import os
 import xarray as xr
+
 # from utils import get_density, get_depth
-from metrics import check_density, temperature_500m_30NS_metric, temperature_BWbox_metric, temperature_DWbox_metric, ACC_Drake_metric, NASTG_BSF_max
+from metrics import (
+    check_density,
+    temperature_500m_30NS_metric,
+    temperature_BWbox_metric,
+    temperature_DWbox_metric,
+    ACC_Drake_metric,
+    NASTG_BSF_max,
+)
 
 
 def read_data(datafilepath, maskfilepath):
-    
     filename = os.path.basename(datafilepath)
-    if 'restart' in filename:
+    if "restart" in filename:
         print("The provided file is a 'restart' file\n")
-    elif 'grid' in filename:
+    elif "grid" in filename:
         print("The provided file is a 'grid' file\n")
-        
-    data = xr.open_dataset(datafilepath,decode_cf=False).rename({"deptht":"depth","y":"nav_lat","x":"nav_lon"})
+
+    data = xr.open_dataset(datafilepath, decode_cf=False).rename(
+        {"deptht": "depth", "y": "nav_lat", "x": "nav_lon"}
+    )
     print(f"Successfully loaded dataset from {filename}")
-    mask = xr.open_dataset(maskfilepath).rename({"nav_lev":"depth","y":"nav_lat","x":"nav_lon"})
+    mask = xr.open_dataset(maskfilepath).rename(
+        {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
+    )
     print(f"Successfully loaded mesh mask for {filename}")
-    
+
     return data, mask
-        
-        
-        
+
+
 def apply_metrics(data, mask):
-    
     metrics_dict = {
-        'check_density': check_density,
-        'temperature_500m_30NS_metric': temperature_500m_30NS_metric,
-        'temperature_BWbox_metric': temperature_BWbox_metric,
-        'temperature_DWbox_metric': temperature_DWbox_metric,
-        'ACC_Drake_metric': ACC_Drake_metric,
-        'NASTG_BSF_max': NASTG_BSF_max
+        "check_density": check_density,
+        "temperature_500m_30NS_metric": temperature_500m_30NS_metric,
+        "temperature_BWbox_metric": temperature_BWbox_metric,
+        "temperature_DWbox_metric": temperature_DWbox_metric,
+        "ACC_Drake_metric": ACC_Drake_metric,
+        "NASTG_BSF_max": NASTG_BSF_max,
     }
-        
+
     results = {}
 
     for name, func in metrics_dict.items():
@@ -42,10 +51,10 @@ def apply_metrics(data, mask):
         except Exception as e:
             results[name] = f"Error: {str(e)}"
 
-    print(f'Successfully ran the metric `{name}` on the given file')
-        
-        
-## Example        
+    print(f"Successfully ran the metric `{name}` on the given file")
+
+
+## Example
 # filepath = "/home/sg2147/nc_files/nc_files/DINO_00576000_restart.nc"
 filepath = "/home/sg2147/nc_files/nc_files/DINO_1y_grid_T.nc"
 maskfile = "/home/sg2147/nc_files/nc_files/mesh_mask.nc"
