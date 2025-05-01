@@ -1,16 +1,23 @@
-"Helper functions for running the metrics functions"
+"""Helper functions for running the metrics functions."""
+
+import numpy as np
 
 
 def get_deptht(restart, mask):
     """
     Calculate the depth of each vertical level on grid T in the 3D grid.
 
-    Parameters:
-        restart (xarray.Dataset)     : The dataset containing ocean model variables.
-        mask (xarray.Dataset) : The dataset containing mask variables.
+    Parameters
+    ----------
+    restart  : xarray.Dataset
+        The dataset containing ocean model variables.
+    mask     : xarray.Dataset
+        The dataset containing mask variables.
 
-    Returns:
-        deptht (numpy.array) : The depth of each vertical level.
+    Returns
+    -------
+    deptht   : numpy.array
+        The depth of each vertical level.
     """
     ssh = restart.sshn.squeeze()
     e3w_0 = (
@@ -37,16 +44,23 @@ def get_density(thetao, so, depth, tmask):
     """
     Compute potential density referenced at the surface and density anomaly.
 
-    Parameters:
-        thetao (numpy.array) : Temperature array - (t,z,y,x).
-        so (numpy.array)     : Salinity array    - (t,z,y,x).
-        depth (numpy.array)  : Depth array       - (t,z,y,x).
-        tmask (numpy.array)  : Mask array        - (t,z,y,x).
+    Parameters
+    ----------
+    thetao : numpy.ndarray
+        Temperature array of shape (t, z, y, x).
+    so : numpy.ndarray
+        Salinity array of shape (t, z, y, x).
+    depth : numpy.ndarray
+        Depth array of shape (t, z, y, x).
+    tmask : numpy.ndarray
+        Mask array of shape (t, z, y, x).
 
-    Returns:
-        tuple: A tuple containing:
-            array: Potential density referenced at the surface.
-            array: Density anomaly.
+    Returns
+    -------
+    tuple of numpy.ndarray
+        - Potential density referenced at the surface.
+        - Density anomaly.
+
     """
     rdeltaS = 32.0
     r1_S0 = 0.875 / 35.16504
