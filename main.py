@@ -5,7 +5,7 @@ import os
 import xarray as xr
 
 # from utils import get_density, get_depth
-from metrics import (
+from src.metrics import (
     ACC_Drake_metric,
     NASTG_BSF_max,
     check_density,
@@ -72,7 +72,7 @@ def apply_metrics(data, mask):
 
 ## Example
 # filepath = "/home/sg2147/nc_files/nc_files/DINO_00576000_restart.nc"
-filepath = "/home/sg2147/nc_files/nc_files/DINO_1y_grid_T.nc"
-maskfile = "/home/sg2147/nc_files/nc_files/mesh_mask.nc"
+filepath = "data/nemo-raw/DINO_1y_grid_T.nc"
+maskfile = "data/nemo-raw/mesh_mask.nc"
 data, mask = read_data(filepath, maskfile)
 results = apply_metrics(data, mask)
