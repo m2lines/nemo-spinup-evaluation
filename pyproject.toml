@@ -1,0 +1,52 @@
+[project]
+name = "spinup-evaluation"
+version = "0.1"
+requires-python = ">=3.9"
+authors = [
+  {name = "Matt Archer", email="ma595@cam.ac.uk" },
+  {name = "Surbhi Goel", email="sg2147@cam.ac.uk" },
+]
+readme = "README.md"
+license = { file = "LICENSE" }
+keywords = ["python", "machine-learning", "benchmarking"]
+classifiers = [
+	"Development Status :: 4 - Beta",
+	"Programming Language :: Python",
+]
+
+dependencies = ["xarray[complete]==2024.7.0", "numpy==2.0.2"]
+
+[project.optional-dependencies]
+dev = ["ruff"]
+
+[project.urls]
+Repository = "https://github.com/m2lines/Spinup-Evaluation"
+Issues = "https://github.com/m2lines/Spinup-Evaluation"
+
+[tool.setuptools]
+packages = ["spinup-evaluation"]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# See https://docs.astral.sh/ruff/rules for full details of each ruleset.
+
+# Enable:  D: `pydocstyle`, PL: `pylint`, I: `isort`, W: `pycodestyle whitespace`
+#          NPY: `numpy`, FLY: `flynt`, F: `pyflakes`, RUF: `ruff`
+#          From flake8: "ARG", "SLF", "S", "BLE", "B", "A", "C4", "EM", "ICN",
+#                       "PIE", "Q", "RSE", "SIM", "TID"
+select = ["D", "PL", "I", "E", "W", "NPY", "FLY", "F", "RUF",
+          "ARG", "SLF", "S", "BLE","B", "A", "C4", "EM", "ICN", "PIE", "Q", "RSE",
+          "SIM", "TID"]
+
+# Enable D417 (Missing argument description) on top of the NumPy convention.
+extend-select = ["D417"]
+
+# Ignore SIM108 (use ternary instead of if-else) as I think it can obscure intent.
+# Ignore RUF002 (ambiguous characters) as it does not allow apostrophes in strings.
+ignore = ["SIM108", "RUF002"]
+
+[tool.ruff.lint.pydocstyle]
+# Use NumPy convention for checking docstrings
+convention = "numpy"
