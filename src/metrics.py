@@ -1,7 +1,7 @@
 """Core metrics functions to evaluate the simulations and projections."""
 
-import xarray
-
+import xarray 
+import numpy as np
 
 def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     """
@@ -30,6 +30,39 @@ def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     )  # Proportion of points not respecting decreasing density
 
 
+def wrap_temperature_numpy_as_xarray(
+    temperature_np: np.ndarray,  # shape (time, depth, y, x)
+    mask: xarray.Dataset
+) -> xarray.DataArray:
+    # Extract coordinates and dimensions
+    time = mask.time_counter.values
+    depth = mask.tmask.depth.values
+    # nav_lat = mask.tmask.nav_lat.squeeze().values.flatten()  # shape (y, x)
+    # nav_lon = mask.tmask.nav_lon.squeeze().values.flatten()  # shape (y, x)
+    nav_lat = mask.tmask["nav_lat"].squeeze().values  # shape (lat, lon)
+    nav_lon = mask.tmask["nav_lon"].squeeze().values
+
+    # print("nav_lat shape ", nav_lat.shape)
+    # print("nav_lat type ", type(nav_lat))
+    # print("nav_lat ", nav_lat)
+
+    thetao =  xarray.DataArray(
+        temperature_np,
+        dims=["depth", "nav_lat", "nav_lon"],
+        coords={
+            # "time": time,
+            "depth": depth,
+            # "nav_lat": nav_lat,
+            # "nav_lon": nav_lon,
+        },
+        name="temperature"
+    )
+
+    # print(thetao.nav_lat.shape)
+
+    return thetao
+
+
 def temperature_500m_30NS_metric(
     temperature: xarray.DataArray, file_mask: xarray.Dataset
 ):
@@ -56,10 +89,31 @@ def temperature_500m_30NS_metric(
         abs(temperature.nav_lat) < 30, drop=False
     )
 
+
+    print(t500_30NS.values.shape)
+
     # Computing Area Weights from Mask over 30N-30S latitude zone and @500m depth
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
+
+    # check if temperature.nav_lat is the same as file_mask.nav_lat
+    # print(temperature.nav_lat)
+    # print(file_mask.nav_lat)
+    # print(tmask.sel(depth=500, method="nearest").where(abs(temperature.nav_lat) < 30,
+    # drop=False).values.shape)
+    # print(tmask.sel(depth=500, method="nearest").where(abs(temperature.nav_lat) < 30,
+    # drop=False).values.shape)
+
+    # print("are nav ", np.allclose(
+    #     temperature.nav_lat, file_mask.tmask.nav_lat
+    #     )  # Check if the two arrays are equal
+    # )
+    
+    # print(temperature.nav_lat.values.shape)
+    # print(temperature.)
+    
+    
     area_500m_30NS = (
         e1t
         * e2t
@@ -68,6 +122,8 @@ def temperature_500m_30NS_metric(
         )
     )
 
+
+    # print(area_500m_30NS.sum(dim=["nav_lat", "nav_lon"]))
     # Returning Average Temperature at 500m depth as a numpy scalar
     return (t500_30NS * area_500m_30NS).sum(
         dim=["nav_lat", "nav_lon"]
@@ -318,3 +374,52 @@ def NASTG_BSF_max(
     # Selecting the maximum value of the BSF in the selected window
     # and return it as a numpy scalar
     return BSF_NASPG.max(dim=["nav_lat", "nav_lon"])
+
+# def temperature_500m_30NS_metric_numpy(
+#     temperature: np.ndarray,  # shape (time, depth, lat, lon)
+#     depth: np.ndarray,        # shape (depth,)
+#     nav_lat: np.ndarray,      # shape (lat, lon)
+#     e1t: np.ndarray,          # shape (lat, lon)
+#     e2t: np.ndarray,          # shape (lat, lon)
+#     tmask: np.ndarray,         # shape (depth, lat, lon)
+#     mask
+# ) -> float:
+#     # Find index of depth closest to 500m
+#     depth_idx = np.abs(depth - 500).argmin()
+#     # print(f"Depth index for 500m: {depth[depth_idx]}")
+
+#     # Create 30N-30S latitude mask
+#     lat_mask = np.abs(nav_lat) < 30  # shape (lat, lon)
+
+#     # Slice data at that depth
+#     temp_500 = temperature[depth_idx, :, :]         # shape (lat, lon)
+#     mask_500 = tmask[depth_idx, :, :]                  # shape (lat, lon)
+
+#     # print("NumPy valid mask points:", temp_500.shape)
+#     # Combine masks
+#     valid_mask = lat_mask & (mask_500 == 1)            # shape (lat, lon)
+
+#     tmask = mask.tmask
+
+#     area_500m_30NS = (
+#         e1t
+#         * e2t
+#         * tmask.sel(depth=500, method="nearest").where(
+#             abs(tmask.nav_lat) < 30, drop=False
+#         )
+#     )
+
+#     # Area weights
+#     area = e1t * e2t                                   # shape (lat, lon)
+#     weighted_temp = temp_500 * area * valid_mask
+#     # total_area = (area * valid_mask).sum()
+
+#     # print(weighted_temp.sum())
+
+#     total_area = area_500m_30NS.sum(dim=["nav_lat", "nav_lon"])
+
+#     # print(weighted_temp.sum()/total_area)
+#     print(total_area)
+
+#     # return weighted_temp.sum() / total_area
+#     return total_area

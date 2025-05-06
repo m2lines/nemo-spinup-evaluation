@@ -3,6 +3,99 @@
 import numpy as np
 
 
+def read_data(datafilepath, maskfilepath):
+    """Read the data and mask files."""
+    filename = os.path.basename(datafilepath)
+    if "restart" in filename:
+        print("The provided file is a 'restart' file\n")
+    elif "grid" in filename:
+        print("The provided file is a 'grid' file\n")
+
+    # this fails on restart files because deptht is not a variable
+
+    if "grid" in filename:
+        data = xr.open_dataset(datafilepath, decode_cf=False).rename(
+            {"deptht": "depth", "y": "nav_lat", "x": "nav_lon"}
+        )
+    elif "restart" in filename:
+        data = xr.open_dataset(datafilepath).rename(
+            {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
+        )
+
+    print(f"Successfully loaded dataset from {filename}")
+
+    mask = xr.open_dataset(maskfilepath).rename(
+        {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
+    )
+    print(f"Successfully loaded mesh mask for {filename}")
+
+    return data, mask
+
+def test_depth_equivalence(restart, ssh):
+    """
+    Test the equivalence of depth calculation methods.
+
+    Parameters
+    ----------
+    restart : xarray.Dataset
+        The dataset containing ocean model variables.
+    ssh     : numpy.ndarray
+        Sea surface height array of shape (t, y, x).
+
+    Returns
+    -------
+    bool
+        True if the two methods yield equivalent results, False otherwise.
+    """
+    mask = restart.mask.squeeze()
+    depth1 = get_depth(restart, mask)
+    depth2 = get_depth(ssh, mask)
+    return np.allclose(depth1, depth2)
+
+def test_deptht_equivalence(restart, ssh):
+    ssh_restart = restart.sshn.squeeze()
+    ssh = ssh.squeeze()
+    # check if ssh and ssh_restart are equal
+    if not np.allclose(ssh_restart, ssh):
+        raise ValueError("ssh and ssh_restart are not equal")
+
+
+def get_depth(ssh, mask):
+    """
+    Calculate the depth of each vertical level on grid T in the 3D grid.
+
+    Parameters
+    ----------
+    ssh  : np.ndarray
+        The dataset containing ocean model variables.
+    mask     : xarray.Dataset
+        The dataset containing mask variables.
+
+    Returns
+    -------
+    deptht   : numpy.array
+        The depth of each vertical level.
+    """
+    # ssh = restart.sshn.squeeze()
+    e3w_0 = (
+        mask.e3w_0.squeeze()
+    )  # initial z axis cell's thickness on grid W - (t,z,y,x)
+    e3t_0 = (
+        mask.e3t_0.squeeze()
+    )  # initial z axis cell's thickness on grid T - (t,z,y,x)
+    tmask = (
+        mask.tmask.squeeze()
+    )  # grid T continent mask                     - (t,z,y,x)
+    ssmask = tmask[:, 0]  # bathymetry                                - (t,y,x)
+    bathy = e3t_0.sum(
+        dim="depth"
+    )  # initial condition depth 0                 - (t,z,y,x)
+    depth_0 = e3w_0.copy().squeeze()
+    depth_0[:, 0] = 0.5 * e3w_0[:, 0]
+    depth_0[:, 1:] = depth_0[:, 0:1].data + e3w_0[:, 1:].cumsum(dim="depth")
+    deptht = depth_0 * (1 + ssh / (bathy + 1 - ssmask)) * tmask
+    return deptht
+
 def get_deptht(restart, mask):
     """
     Calculate the depth of each vertical level on grid T in the 3D grid.
