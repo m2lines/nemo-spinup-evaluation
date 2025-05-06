@@ -104,16 +104,33 @@ def output_metrics(results, output_filepath):
 
 
 if __name__ == "__main__":
-    # Example use
+    # Example use:
     # python main.py --restart ../../spinup-data/nemo-raw/DINO_00576000_restart.nc \
     # --mesh-mask ../../spinup-data/nemo-raw/mesh_mask.nc
 
-    parser = argparse.ArgumentParser(description="metric evaluation")
-    parser.add_argument("--restart", type=str, help="Path to restart file")
-    parser.add_argument("--mesh-mask", type=str, help="Path to mesh mask file")
-    parser.add_argument(
-        "--output", type=str, default="metrics_results.txt", help="Path to output file"
+    parser = argparse.ArgumentParser(
+        description="Compute climate model diagnostics from a restart file and mesh mask."
     )
+
+    parser.add_argument(
+        "--restart",
+        type=str,
+        required=True,
+        help="Path to the model restart file (e.g., restart.nc)",
+    )
+    parser.add_argument(
+        "--mesh-mask",
+        type=str,
+        required=True,
+        help="Path to the NEMO mesh mask file (e.g., mesh_mask.nc)",
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="metrics_results.txt",
+        help="Path to save output metric values (default: metrics_results.txt)",
+    )
+
     args = parser.parse_args()
 
     restart_data, mesh_mask = read_data(args.restart, args.mesh_mask)
