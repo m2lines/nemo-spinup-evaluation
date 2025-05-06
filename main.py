@@ -41,7 +41,7 @@ def read_data(datafilepath, maskfilepath):
     return data, mask
 
 
-def apply_metrics_restart(data, mask):
+def apply_metrics_restart(restart, mask):
     """
     Apply metrics to restart netcdf and mask.
 
@@ -57,30 +57,26 @@ def apply_metrics_restart(data, mask):
         dict: A dictionary containing the results of the metrics.
     """
 
-    print(check_density(data.rhop))
-    print(type(check_density(data.rhop)))
-    print(check_density(data.rhop).shape)
-
     metrics_fns = {
-        "check_density": lambda data, mask: check_density(data.rhop),
-        "temperature_500m_30NS_metric": lambda data, mask: temperature_500m_30NS_metric(
-            data.tn, mask
+        "check_density": lambda restart: check_density(restart.rhop),
+        "temperature_500m_30NS_metric": lambda restart: temperature_500m_30NS_metric(
+            restart.tn, mask
         ),
-        "temperature_BWbox_metric": lambda data, mask: temperature_BWbox_metric(
-            data.tn, mask
+        "temperature_BWbox_metric": lambda restart: temperature_BWbox_metric(
+            restart.tn, mask
         ),
-        "temperature_DWbox_metric": lambda data, mask: temperature_DWbox_metric(
-            data.un, mask
+        "temperature_DWbox_metric": lambda restart: temperature_DWbox_metric(
+            restart.un, mask
         ),
-        "ACC_Drake_metric": lambda data, mask: ACC_Drake_metric(data.un, mask),
-        "NASTG_BSF_max": lambda data, mask: NASTG_BSF_max(data.vn, data.sshn, mask),
+        "ACC_Drake_metric": lambda restart: ACC_Drake_metric(restart.un, mask),
+        "NASTG_BSF_max": lambda restart: NASTG_BSF_max(restart.vn, restart.sshn, mask),
     }
 
     results = {}
 
     for name, func in metrics_fns.items():
         try:
-            results[name] = func(data, mask)
+            results[name] = func(restart)
             print(f"Successfully ran the metric `{name}` on the given file")
         except Exception as e:
             results[name] = f"Error: {e!s}"
