@@ -3,8 +3,8 @@
 import os
 
 import xarray as xr
+import argparse
 
-# from utils import get_density, get_depth
 from src.metrics import (
     ACC_Drake_metric,
     NASTG_BSF_max,
@@ -23,9 +23,15 @@ def read_data(datafilepath, maskfilepath):
     elif "grid" in filename:
         print("The provided file is a 'grid' file\n")
 
-    data = xr.open_dataset(datafilepath, decode_cf=False).rename(
-        {"deptht": "depth", "y": "nav_lat", "x": "nav_lon"}
-    )
+    if "grid" in filename:
+        data = xr.open_dataset(datafilepath, decode_cf=False).rename(
+            {"deptht": "depth", "y": "nav_lat", "x": "nav_lon"}
+        )
+    elif "restart" in filename:
+        data = xr.open_dataset(datafilepath).rename(
+            {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
+        )
+
     print(f"Successfully loaded dataset from {filename}")
     mask = xr.open_dataset(maskfilepath).rename(
         {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
@@ -35,44 +41,86 @@ def read_data(datafilepath, maskfilepath):
     return data, mask
 
 
-def apply_metrics(data, mask):
+def apply_metrics_restart(data, mask):
     """
-    Apply metrics to the data and mask.
+    Apply metrics to restart netcdf and mask.
 
     Parameters
     ----------
     data  : xarray.Dataset
-        The dataset containing ocean model variables.
-    mask  : (xarray.Dataset)
+        The restart dataset containing ocean model variables.
+    mask  : xarray.Dataset
         The dataset containing mask variables.
 
     Returns
     -------
         dict: A dictionary containing the results of the metrics.
     """
-    metrics_dict = {
-        "check_density": check_density,
-        "temperature_500m_30NS_metric": temperature_500m_30NS_metric,
-        "temperature_BWbox_metric": temperature_BWbox_metric,
-        "temperature_DWbox_metric": temperature_DWbox_metric,
-        "ACC_Drake_metric": ACC_Drake_metric,
-        "NASTG_BSF_max": NASTG_BSF_max,
+
+    print(check_density(data.rhop))
+    print(type(check_density(data.rhop)))
+    print(check_density(data.rhop).shape)
+
+    metrics_fns = {
+        "check_density": lambda data, mask: check_density(data.rhop),
+        "temperature_500m_30NS_metric": lambda data, mask: temperature_500m_30NS_metric(
+            data.tn, mask
+        ),
+        "temperature_BWbox_metric": lambda data, mask: temperature_BWbox_metric(
+            data.tn, mask
+        ),
+        "temperature_DWbox_metric": lambda data, mask: temperature_DWbox_metric(
+            data.un, mask
+        ),
+        "ACC_Drake_metric": lambda data, mask: ACC_Drake_metric(data.un, mask),
+        "NASTG_BSF_max": lambda data, mask: NASTG_BSF_max(data.vn, data.sshn, mask),
     }
 
     results = {}
 
-    for name, func in metrics_dict.items():
+    for name, func in metrics_fns.items():
         try:
             results[name] = func(data, mask)
+            print(f"Successfully ran the metric `{name}` on the given file")
         except Exception as e:
             results[name] = f"Error: {e!s}"
+            print(f"Error running metric `{name}` on the given file")
 
-    print(f"Successfully ran the metric `{name}` on the given file")
+    return results
 
 
-## Example
-# filepath = "/home/sg2147/nc_files/nc_files/DINO_00576000_restart.nc"
-filepath = "data/nemo-raw/DINO_1y_grid_T.nc"
-maskfile = "data/nemo-raw/mesh_mask.nc"
-data, mask = read_data(filepath, maskfile)
-results = apply_metrics(data, mask)
+def output_metrics(results, output_filepath):
+    """
+    Output the results of the metrics to a file.
+
+    Parameters
+    ----------
+    results : dict
+        The results of the metrics.
+    output_filepath : str
+        The path to the output file.
+    """
+    with open(output_filepath, "w") as f:
+        for name, result in results.items():
+            f.write(f"{name}: {result.item():.6f}\n")
+            print(f"{name}: {result.item():.6f}\n")
+        print("Successfully wrote metrics to file")
+
+
+if __name__ == "__main__":
+    # Example use
+    # python main.py --restart ../../spinup-data/nemo-raw/DINO_00576000_restart.nc \
+    # --mesh-mask ../../spinup-data/nemo-raw/mesh_mask.nc
+
+    parser = argparse.ArgumentParser(description="metric evaluation")
+    parser.add_argument("--restart", type=str, help="Path to restart file")
+    parser.add_argument("--mesh-mask", type=str, help="Path to mesh mask file")
+    parser.add_argument(
+        "--output", type=str, default="metrics_results.txt", help="Path to output file"
+    )
+    args = parser.parse_args()
+
+    restart_data, mesh_mask = read_data(args.restart, args.mesh_mask)
+    results = apply_metrics_restart(restart_data, mesh_mask)
+    output_filepath = args.output
+    output_metrics(results, output_filepath)
