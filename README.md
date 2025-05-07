@@ -1,10 +1,10 @@
 # Spinup-Evaluation
 
-This repository contains code for benchmarking the machine learning spin-up of ocean models. It is designed to pair with the `Spinup-Forecast` repository, which provides the machine learning models for spin-up. The goal of this evaluation is to assess the performance of the spin-up process in terms of stability and convergence.
+This repository contains code for benchmarking the machine learning spin-up of ocean models. It is designed to pair with [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast), which provides the machine learning models for accelerating the spin-up process. The goal of this evaluation is to assess the performance of the spin-up process in terms of stability and convergence.
 
 The evaluation is performed using the `main.py` script, which calls a set of metrics defined in the `metrics.py` file.
 
-The results are saved in a JSON file, which can be easily parsed and analyzed.
+The results are saved in a .txt file.
 
 The API is as follows:
 
@@ -12,23 +12,34 @@ The API is as follows:
 - `src/metrics.py`: Contains the definitions of the metrics used for evaluation.
 - `src/utils.py`: Contains utility functions for data processing and visualization.
 
+<!-- ```plaintext
+.
+├── main.py                # Entry point script
+├── pyproject.toml         # Build system and tool configuration (e.g. black, ruff)
+├── README.md              # Project overview and usage
+├── LICENSE                # Project license
+└── src/                   # Source code
+    ├── metrics.py         # Metric calculation functions
+    └── utils.py           # General utilities used across the project
+``` -->
+
 `main.py` is the entry point for the evaluation process. It takes the following command-line arguments:
-- `--restart`: Path to model restart file
+- `--restart`: Path to model restart file.
 - `--mesh-mask`: The name of the mesh mask file.
 - `--output` : The name of the output file where the metrics are stored. The default is `metric_results.txt`.
 
 ## Usage [TODO]
-This repo is a WIP and usage is subject to change. Figure 1 below shows the how evaluation proceeds for Spinup-Evaluation.
+This repo is a WIP and usage is subject to change. Figure 1 below shows how the evaluation procedure works in Spinup-Evaluation.
 
 <p align="center">
 <img src="chart.svg" alt="NEMO flow" width="500"/>
 <figcaption>Fig 1. Evaluation flow diagram</figcaption>
 </p>
 
-These metrics were developed to assess the DINO configuration of NEMO, but they can be used for any spin-up ocean model, however, it will be necessary to add new metrics to the `metrics.py`. Please see the section [Adding New Metrics](#adding-new-metrics) for more information.
+Spinup-Evaluation was developed to assess the DINO configuration of NEMO, but new metrics can be added to metrics.py to make it compatible with any ocean model. See [Adding New Metrics](#adding-new-metrics) for details.
 
 ### Running on saved checkpoint
-To evaluate a state obtained from a checkpoint, run spinup-evalution as follows
+To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows.
 
 ```sh
 python main.py \
@@ -40,7 +51,7 @@ python main.py \
 ### Running on predictions [TODO]
 To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) do the following:
 
-* `--predictions` : The path to directory containing the new `pred_[variable].npy` spin-up states from `Spinup-Forecast`.
+* `--predictions`: The path to directory containing the new `pred_[variable].npy` spin-up states from `Spinup-Forecast`.
     - pred_so.npy
     - pred_thetao.npy
     - pred_zos.npy
@@ -55,7 +66,7 @@ To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.
 ## Installation
 To install Spinup-Evaluation, clone the repository and create a virtual environment:
 ```bash
-git clone
+git clone https://github.com/m2lines/Spinup-Evaluation.git
 cd Spinup-Evaluation
 python -m venv venv
 source venv/bin/activate  # On Windows use `venv\Scripts\activate`
