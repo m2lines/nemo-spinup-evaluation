@@ -1,9 +1,9 @@
 """Run metrics on data file."""
 
+import argparse
 import os
 
 import xarray as xr
-import argparse
 
 from src.metrics import (
     ACC_Drake_metric,
@@ -47,7 +47,7 @@ def apply_metrics_restart(restart, mask):
 
     Parameters
     ----------
-    data  : xarray.Dataset
+    restart  : xarray.Dataset
         The restart dataset containing ocean model variables.
     mask  : xarray.Dataset
         The dataset containing mask variables.
@@ -56,7 +56,6 @@ def apply_metrics_restart(restart, mask):
     -------
         dict: A dictionary containing the results of the metrics.
     """
-
     metrics_fns = {
         "check_density": lambda restart: check_density(restart.rhop),
         "temperature_500m_30NS_metric": lambda restart: temperature_500m_30NS_metric(
@@ -78,7 +77,7 @@ def apply_metrics_restart(restart, mask):
         try:
             results[name] = func(restart)
             print(f"Successfully ran the metric `{name}` on the given file")
-        except Exception as e:
+        except (ValueError, KeyError, TypeError) as e:
             results[name] = f"Error: {e!s}"
             print(f"Error running metric `{name}` on the given file")
 
@@ -109,7 +108,8 @@ if __name__ == "__main__":
     # --mesh-mask ../../spinup-data/nemo-raw/mesh_mask.nc
 
     parser = argparse.ArgumentParser(
-        description="Compute climate model diagnostics from a restart file and mesh mask."
+        description="Compute climate model diagnostics from a restart file and \
+        mesh_mask."
     )
 
     parser.add_argument(
