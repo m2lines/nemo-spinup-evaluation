@@ -1,10 +1,8 @@
 # Spinup-Evaluation
 
-This repository contains code for benchmarking the machine learning spin-up of ocean models. It is designed to pair with [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast), which provides the machine learning models for accelerating the spin-up process. The goal of this evaluation is to assess the performance of the spin-up process in terms of stability and convergence.
+This repository contains code for benchmarking the machine learning spin-up of ocean models. It is designed to pair with [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast), which provides the machine learning models for accelerating the spin-up process for NEMO/DINO. The goal of this evaluation is to assess the performance of the spin-up process in terms of stability and convergence.
 
-The evaluation is performed using the `main.py` script, which calls a set of metrics defined in the `metrics.py` file.
-
-The results are saved in a .txt file.
+The evaluation is performed using the `main.py` script, which calls a set of metrics defined in the `metrics.py` file. The results are saved in a .txt file.
 
 The API is as follows:
 
@@ -38,7 +36,7 @@ This repo is a WIP and usage is subject to change. Figure 1 below shows how the 
 
 Spinup-Evaluation was developed to assess the DINO configuration of NEMO, but new metrics can be added to metrics.py to make it compatible with any ocean model. See [Adding New Metrics](#adding-new-metrics) for details.
 
-### Running on saved checkpoint
+### Running on Saved Restart File
 To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows.
 
 ```sh
@@ -48,10 +46,10 @@ python main.py \
   --output <path-to-output>
 ```
 
-### Running on predictions [TODO]
+### Running on Predictions [TODO]
 To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) do the following:
 
-* `--predictions`: The path to directory containing the new `pred_[variable].npy` spin-up states from `Spinup-Forecast`.
+* `--predictions`: The path to the directory containing the new `pred_[variable].npy` spin-up states from `Spinup-Forecast`.
     - pred_so.npy
     - pred_thetao.npy
     - pred_zos.npy
@@ -106,3 +104,5 @@ pytest tests/
 When running the metrics on updated predictions, you can also provide the `--restart` flag to the `main.py` script, referencing the old restart file. This will provide an updated restart in a format that can be used for restarting the model, prepended with "NEW".
 
 See this Github Gist for more information on steps involved https://gist.github.com/ma595/bf2b977593171d7e2cd840dd4b452ead
+
+See [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) for generating spin-up predictions used as input here.
