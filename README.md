@@ -18,7 +18,12 @@ The API is as follows:
 - `--output` : The name of the output file where the metrics are stored. The default is `metric_results.txt`.
 
 ## Usage [TODO]
-This repo is a WIP and usage is subject to change.
+This repo is a WIP and usage is subject to change. Figure 1 below shows the how evaluation proceeds for Spinup-Evaluation.
+
+<p align="center">
+<img src="chart.svg" alt="NEMO flow" width="500"/>
+<figcaption>Fig 1. Evaluation flow diagram</figcaption>
+</p>
 
 These metrics were developed to assess the DINO configuration of NEMO, but they can be used for any spin-up ocean model, however, it will be necessary to add new metrics to the `metrics.py`. Please see the section [Adding New Metrics](#adding-new-metrics) for more information.
 
@@ -46,10 +51,6 @@ To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.
     i.e. `` -->
 
 <!-- > ![alt text](image.png) -->
-<p align="center">
-<img src="chart.svg" alt="NEMO flow" width="500"/>
-<figcaption>Fig 1. Evaluation flow diagram</figcaption>
-</p>
 
 ## Installation
 To install Spinup-Evaluation, clone the repository and create a virtual environment:
