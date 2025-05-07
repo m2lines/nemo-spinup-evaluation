@@ -45,7 +45,11 @@ To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.
 * [Optional] The restart file from the NEMO/DINO model.
     i.e. `` -->
 
-<pre> ```mermaid flowchart TD subgraph SequenceStart[Sequence Start] RU[Restart Unified] end RU --> GT[Grid T] GT --> F[Forecast] F -->|.npy| ET[Evaluation Toolbox] mesh[mesh mask] --> ET refseq[Reference Sequence] --> ET ET --> M[Metrics] ET --> RUF[(Restart unified file)] style RU fill:#fff2cc,stroke:#d6b656 style F fill:#e1d5e7,stroke:#9673a6 style ET fill:#f8cecc,stroke:#b85450 style refseq fill:#dae8fc,stroke:#6c8ebf,stroke-dasharray: 5 5 ``` </pre>
+<!-- > ![alt text](image.png) -->
+<p align="center">
+<img src="chart.svg" alt="NEMO flow" width="500"/>
+<figcaption>Fig 1. Evaluation flow diagram</figcaption>
+</p>
 
 ## Installation
 To install Spinup-Evaluation, clone the repository and create a virtual environment:
@@ -89,4 +93,4 @@ pytest tests/
 
 When running the metrics on updated predictions, you can also provide the `--restart` flag to the `main.py` script, referencing the old restart file. This will provide an updated restart in a format that can be used for restarting the model, prepended with "NEW".
 
-See this Github [Gist](https://gist.github.com/ma595/bf2b977593171d7e2cd840dd4b452ead) for more information on steps involved.
+See this Github Gist for more information on steps involved https://gist.github.com/ma595/bf2b977593171d7e2cd840dd4b452ead
