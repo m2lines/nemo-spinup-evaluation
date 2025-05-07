@@ -13,7 +13,7 @@ on:
 jobs:
   formatting:
     runs-on: ubuntu-latest
-    name: Code Formatting and Trailing Whitespace Check
+    name: Code Formatting and Linting Check
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -22,3 +22,8 @@ jobs:
         uses: astral-sh/ruff-action@v3
         with:
           args: "format --check --diff"
+
+      - name: Run Ruff for linting check
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "check"
