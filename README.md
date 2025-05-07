@@ -9,17 +9,43 @@ The results are saved in a JSON file, which can be easily parsed and analyzed.
 The API is as follows:
 
 - `main.py`: The main script to run the evaluation.
-analysis.
-- `metrics.py`: Contains the definitions of the metrics used for evaluation.
-- `metric_results.txt`: The output file containing the evaluation results.
-analysis.
-- `utils.py`: Contains utility functions for data processing and visualization.
+- `src/metrics.py`: Contains the definitions of the metrics used for evaluation.
+- `src/utils.py`: Contains utility functions for data processing and visualization.
 
 `main.py` is the entry point for the evaluation process. It takes the following command-line arguments:
 - `--restart`: Path to model restart file
 - `--mesh-mask`: The name of the mesh mask file.
-- `--output` : The name of the output file. The default is `metric_results.txt`.
+- `--output` : The name of the output file where the metrics are stored. The default is `metric_results.txt`.
 
+## Usage [TODO]
+This repo is a WIP and usage is subject to change.
+
+These metrics were developed to assess the DINO configuration of NEMO, but they can be used for any spin-up ocean model, however, it will be necessary to add new metrics to the `metrics.py`. Please see the section [Adding New Metrics](#adding-new-metrics) for more information.
+
+### Running on saved checkpoint
+To evaluate a state obtained from a checkpoint, run spinup-evalution as follows
+
+```sh
+python main.py \
+  --restart <path-to-restart.nc> \
+  --mesh-mask <path-to-mesh_mask.nc> \
+  --output <path-to-output>
+```
+
+### Running on predictions [TODO]
+To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) do the following:
+
+* `--predictions` : The path to directory containing the new `pred_[variable].npy` spin-up states from `Spinup-Forecast`.
+    - pred_so.npy
+    - pred_thetao.npy
+    - pred_zos.npy
+
+<!-- * `--mesh-mask` : Path to the `mesh_mask.nc` file. This file contains the grid information for the model.
+* [Optional] The path to a reference spin-up state. This is used to compare the new spin-up state against a known good state. If not provided, the evaluation will only assess the new spin-up state.
+* [Optional] The restart file from the NEMO/DINO model.
+    i.e. `` -->
+
+<pre> ```mermaid flowchart TD subgraph SequenceStart[Sequence Start] RU[Restart Unified] end RU --> GT[Grid T] GT --> F[Forecast] F -->|.npy| ET[Evaluation Toolbox] mesh[mesh mask] --> ET refseq[Reference Sequence] --> ET ET --> M[Metrics] ET --> RUF[(Restart unified file)] style RU fill:#fff2cc,stroke:#d6b656 style F fill:#e1d5e7,stroke:#9673a6 style ET fill:#f8cecc,stroke:#b85450 style refseq fill:#dae8fc,stroke:#6c8ebf,stroke-dasharray: 5 5 ``` </pre>
 
 ## Installation
 To install Spinup-Evaluation, clone the repository and create a virtual environment:
@@ -47,39 +73,11 @@ pip install -e .[dev]
 pre-commit install
 ```
 
-## Usage
-This repo is a WIP and usage is subject to change.
 
-These metrics were developed to assess the DINO configuration of NEMO, but they can be used for any spin-up ocean model, however, it will be necessary to add new metrics to the `metrics.py` file. Please see the section [Adding New Metrics](#adding-new-metrics) for more information.
+## Adding New Metrics [TODO]
+To add new metrics to the evaluation, modify the `metrics.py` file. Further guidance will be provided in the future.
 
-To evaluate a state obtained from a checkpoint, run spinup-evalution as follows
-
-```sh
-python main.py \
-  --restart <path-to-restart.nc> \
-  --mesh-mask <path-to-mesh_mask.nc> \
-  --output <path-to-output>
-```
-
-To evalute a new spin-up state obtained using [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) do the following:
-To run the evaluation on NEMO/DINO it is necessary to provide the following (TODO):
-
-* `--predictions` : The path to directory containing the new `pred_[variable].npy` spin-up states from `Spinup-Forecast`.
-    - pred_so.npy
-    - pred_thetao.npy
-    - pred_zos.npy
-
-<!-- * `--mesh-mask` : Path to the `mesh_mask.nc` file. This file contains the grid information for the model.
-* [Optional] The path to a reference spin-up state. This is used to compare the new spin-up state against a known good state. If not provided, the evaluation will only assess the new spin-up state.
-* [Optional] The restart file from the NEMO/DINO model.
-    i.e. `` -->
-
-![alt text](image.png)
-
-## Adding New Metrics
-To add new metrics to the evaluation, modify the `metrics.py` file. More to follow...
-
-## Testing
+## Testing [TODO]
 
 Tests are provided in the `tests` directory. To run the tests, use the following command:
 
@@ -87,8 +85,8 @@ Tests are provided in the `tests` directory. To run the tests, use the following
 pytest tests/
 ```
 
-## Restarting NEMO/DINO
+## Restarting NEMO/DINO [TODO]
 
-To use the evaluation in a restart file, you can use the `--restart` flag when running the `main.py` script. This will save the evaluation results in a format that can be used for restarting the model.
+When running the metrics on updated predictions, you can also provide the `--restart` flag to the `main.py` script, referencing the old restart file. This will provide an updated restart in a format that can be used for restarting the model, prepended with "NEW".
 
-See this Github Gist for more information on how to create a compatible restart file: https://gist.github.com/yourusername/your-gist-id.
+See this Github [Gist](https://gist.github.com/ma595/bf2b977593171d7e2cd840dd4b452ead) for more information on steps involved.
