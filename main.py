@@ -20,6 +20,8 @@ def read_data(datafilepath, maskfilepath):
    filename = os.path.basename(datafilepath)
    if "restart" in filename:
        print("The provided file is a 'restart' file\n")
+       data = xr.open_dataset(datafilepath).rename(
+           {"nav_lev":"depth","y":"nav_lat","x":"nav_lon"})
    elif "grid_T" in filename:
        print("The provided file is a 'grid_T' file\n")
        data = xr.open_dataset(datafilepath, decode_cf=False).rename(
@@ -132,6 +134,21 @@ if __name__ == "__main__":
         help="Path to the NEMO mesh mask file (e.g., mesh_mask.nc)",
     )
     parser.add_argument(
+        "--grid_T",
+        type=str,
+        help="Path to the NEMO grid_T file (e.g., _grid_T.nc)",
+    )
+    parser.add_argument(
+        "--grid_U",
+        type=str,
+        help="Path to the NEMO grid_U file (e.g., _grid_U.nc)",
+    )
+    parser.add_argument(
+        "--grid_V",
+        type=str,
+        help="Path to the NEMO grid_V file (e.g., _grid_V.nc)",
+    )
+    parser.add_argument(
         "--output",
         type=str,
         default="metrics_results.txt",
@@ -139,6 +156,12 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    
+    # Ensure at least one of the inputs is provided
+    if not args.restart and not args.grid:
+        print("Error: You must specify at least one of --restart or --grid.")
+        parser.print_help()
+        sys.exit(1)
 
     restart_data, mesh_mask = read_data(args.restart, args.mesh_mask)
     results = apply_metrics_restart(restart_data, mesh_mask)
