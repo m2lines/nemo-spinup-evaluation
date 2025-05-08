@@ -16,29 +16,32 @@ from src.metrics import (
 
 
 def read_data(datafilepath, maskfilepath):
-    """Read the data and mask files."""
-    filename = os.path.basename(datafilepath)
-    if "restart" in filename:
-        print("The provided file is a 'restart' file\n")
-    elif "grid" in filename:
-        print("The provided file is a 'grid' file\n")
+   """Read the data and mask files."""
+   filename = os.path.basename(datafilepath)
+   if "restart" in filename:
+       print("The provided file is a 'restart' file\n")
+   elif "grid_T" in filename:
+       print("The provided file is a 'grid_T' file\n")
+       data = xr.open_dataset(datafilepath, decode_cf=False).rename(
+       {"deptht": "depth", "y": "nav_lat", "x": "nav_lon"})
+   elif "grid_U" in filename:
+       print("The provided file is a 'grid_U' file\n")
+       data=xr.open_dataset(datafilepath,decode_cf=False).rename(
+           {"depthu":"depth","y":"nav_lat","x":"nav_lon"})
+   elif "grid_V" in filename:
+       print("The provided file is a 'grid_V' file\n")
+       data=xr.open_dataset(datafilepath,decode_cf=False).rename(
+           {"depthv":"depth","y":"nav_lat","x":"nav_lon"})
 
-    if "grid" in filename:
-        data = xr.open_dataset(datafilepath, decode_cf=False).rename(
-            {"deptht": "depth", "y": "nav_lat", "x": "nav_lon"}
-        )
-    elif "restart" in filename:
-        data = xr.open_dataset(datafilepath).rename(
-            {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
-        )
 
-    print(f"Successfully loaded dataset from {filename}")
-    mask = xr.open_dataset(maskfilepath).rename(
-        {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
-    )
-    print(f"Successfully loaded mesh mask for {filename}")
+   print(f"Successfully loaded dataset from {filename}")
+   mask = xr.open_dataset(maskfilepath).rename(
+       {"nav_lev": "depth", "y": "nav_lat", "x": "nav_lon"}
+   )
+   print(f"Successfully loaded mesh mask for {filename}")
 
-    return data, mask
+
+   return data, mask
 
 
 def apply_metrics_restart(restart, mask):
