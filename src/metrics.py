@@ -53,7 +53,8 @@ def temperature_500m_30NS_metric(
     """
     # Taking Temperature At 500m depth and between 30N and 30S.
     t500_30NS = temperature.sel(depth=500, method="nearest").where(
-        abs(temperature.nav_lat) < 30, drop=False
+        abs(temperature.nav_lat) < 30,  # noqa: PLR2004
+        drop=False,
     )
 
     # Computing Area Weights from Mask over 30N-30S latitude zone and @500m depth
@@ -64,7 +65,8 @@ def temperature_500m_30NS_metric(
         e1t
         * e2t
         * tmask.sel(depth=500, method="nearest").where(
-            abs(temperature.nav_lat) < 30, drop=False
+            abs(temperature.nav_lat) < 30,  # noqa: PLR2004
+            drop=False,
         )
     )
 
@@ -106,14 +108,14 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
     float
         np.float32 or np.float64 depending on recording precision of simulation files.
     """
-    t_BW = thetao.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))
+    t_BW = thetao.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
 
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
     area_BW = (
-        e1t * e2t * tmask.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))
+        e1t * e2t * tmask.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
     )
 
     # Returning Average Temperature on Box
@@ -157,13 +159,13 @@ def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
-    t_DW = thetao.where(abs((thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))
+    t_DW = thetao.where((abs(thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
 
     # Computing Area Weights from Mask over Box
     area_DW = (
         e1t
         * e2t
-        * tmask.where(abs((thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))
+        * tmask.where(abs((thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
     )
 
     # Returning Average Temperature on Box
@@ -313,8 +315,8 @@ def NASTG_BSF_max(
     ) / 1e6  # Integrating from the West, and converting from m³/s to Sv
     # Selecting 0N-40N window where to search for the maximum, which will correspond to
     # the center of rotation for the gyre
-    BSF_NASPG = BSF.where(abs(BSF.nav_lat - 20) < 20)
+    BSF_NASPG = BSF.where(abs(BSF.nav_lat - 20) < 20)  # noqa: PLR2004
 
     # Selecting the maximum value of the BSF in the selected window
-    # and return it as a numpy scalar
+    # and return it as a numpy scalar68G
     return BSF_NASPG.max(dim=["nav_lat", "nav_lon"])

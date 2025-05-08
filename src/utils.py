@@ -29,7 +29,7 @@ def get_deptht(restart, mask):
     tmask = (
         mask.tmask.squeeze()
     )  # grid T continent mask                     - (t,z,y,x)
-    ssmask = tmask[:, 0]  # bathymetry                                - (t,y,x)
+    ssmask = tmask[:, 0]  # bathymetry             - (t,y,x)
     bathy = e3t_0.sum(
         dim="depth"
     )  # initial condition depth 0                 - (t,z,y,x)
