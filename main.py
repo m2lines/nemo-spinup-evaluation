@@ -97,8 +97,12 @@ def output_metrics(results, output_filepath):
     """
     with open(output_filepath, "w") as f:
         for name, result in results.items():
-            f.write(f"{name}: {result.item():.6f}\n")
-            print(f"{name}: {result.item():.6f}\n")
+            if isinstance(result.item(), (int, float)):
+                f.write(f"{name}: {result.item():.6f}\n")
+                print(f"{name}: {result.item():.6f}\n")
+            else:
+                f.write(f"{name}: {result}\n")
+                print(f"{name}: {result}\n")
         print("Successfully wrote metrics to file")
 
 
