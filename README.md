@@ -37,7 +37,7 @@ This repo is a WIP and usage is subject to change. Figure 1 below shows how the 
 Spinup-Evaluation was developed to assess the DINO configuration of NEMO, but new metrics can be added to metrics.py to make it compatible with any ocean model. See [Adding New Metrics](#adding-new-metrics) for details.
 
 ### Running on instantaneous output (Saved Restart File)
-To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows. This could be from a state from the Ocean Model (NEMO for example) or the "Forecasted state" obtained from [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) after passing through the [Restart toolbox](https://github.com/m2lines/Spinup-Restart). Pass a reference restart file to compare against the new spin-up state.
+To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows. This could be from a state from the Ocean Model (NEMO, for example) or the "Forecasted state" obtained from [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) after passing through the [Restart toolbox](https://github.com/m2lines/Spinup-Restart). Pass a reference restart file to compare against the new spin-up state. For other Ocean models ..
 
 ```sh
 python main.py \
@@ -47,7 +47,7 @@ python main.py \
   --reference <path-to-reference-restart>
 ```
 
-### Running on time averaged state
+### Running on time averaged state (Grid_{T,u,v} states)
 To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) we do the following. This only applies to the old Grid state obtained from th Ocean model (NEMO for example). Pass the path to reference Grid_* files containing the u, v, and T fields. The reference grid files are used to compare against the spin-up state after ocean model correction.
 
 ```sh
@@ -55,7 +55,7 @@ python main.py \
   --restart <path-to-restart.nc> \
   --mesh-mask <path-to-mesh_mask.nc> \
   --output <path-to-output>
-  --reference <path-to-reference-grid-(u,v,T)>
+  --reference <path-to-reference-grid-{u,v,T}>
 ```
 <!-- * `--mesh-mask` : Path to the `mesh_mask.nc` file. This file contains the grid information for the model.
 * [Optional] The path to a reference spin-up state. This is used to compare the new spin-up state against a known good state. If not provided, the evaluation will only assess the new spin-up state.
