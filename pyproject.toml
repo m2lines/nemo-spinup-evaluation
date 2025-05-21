@@ -24,7 +24,8 @@ Repository = "https://github.com/m2lines/Spinup-Evaluation"
 Issues = "https://github.com/m2lines/Spinup-Evaluation"
 
 [tool.setuptools]
-packages = ["spinup-evaluation"]
+py-modules = ["metrics"]  
+package-dir = {"" = "src"}
 
 [tool.ruff]
 line-length = 88
