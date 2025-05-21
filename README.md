@@ -106,3 +106,8 @@ When running the metrics on updated predictions, you can also provide the `--res
 See this Github Gist for more information on steps involved https://gist.github.com/ma595/bf2b977593171d7e2cd840dd4b452ead
 
 See [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast) for generating spin-up predictions used as input here.
+
+
+## Acknowledgements
+
+This work builds on significant contributions by [Etienne Meunier](https://github.com/Etienne-Meunier), whose efforts on the [Metrics-Ocean](https://github.com/Etienne-Meunier/Metrics-Ocean) repository laid the foundation for several components used here.
