@@ -1,5 +1,8 @@
 """Core metrics functions to evaluate the simulations and projections."""
 
+# Adapted from https://github.com/Etienne-Meunier/Metrics-Ocean
+# Original author: Etienne Meunier
+
 import xarray
 
 
