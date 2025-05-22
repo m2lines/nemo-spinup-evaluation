@@ -1,15 +1,38 @@
+"""Dictionary to map standard variable names to different names across datasets."""
 
-# Dictionary to map standard variable names to different names across datasets
 VARIABLE_ALIASES = {
-    "temperature": ["toce", "tn", "temperature"],  # Example: can be called 'toce' or 'tn' in various datasets
-    "velocity_zonal": ["un", "u", "uoce", "zonal_velocity"],  # Zonal velocity can be 'un', 'u', or 'zonal_velocity'
-    "velocity_meridional": ["vn", "v", "voce", "meridional_velocity"],  # Meridional velocity
-    "depth": ["depth", "nav_lev", "deptht", "depthu", "depthv"],  # Depth can be 'depth', 'nav_lev', or 'deptht'
+    "temperature": [
+        "toce",
+        "tn",
+        "temperature",
+    ],  # Example: can be called 'toce' or 'tn' in various datasets
+    "velocity_zonal": [
+        "un",
+        "u",
+        "uoce",
+        "zonal_velocity",
+    ],  # Zonal velocity can be 'un', 'u', or 'zonal_velocity'
+    "velocity_meridional": [
+        "vn",
+        "v",
+        "voce",
+        "meridional_velocity",
+    ],  # Meridional velocity
+    "depth": [
+        "depth",
+        "nav_lev",
+        "deptht",
+        "depthu",
+        "depthv",
+    ],  # Depth can be 'depth', 'nav_lev', or 'deptht'
     "latitude": ["nav_lat", "y"],  # Latitude can be 'nav_lat' or 'y'
     "longitude": ["nav_lon", "x"],  # Longitude can be 'nav_lon' or 'x'
     "ssh": ["sshn", "ssh"],  # Sea surface height could be 'sshn' or 'ssh'
-    "time_counter": ["time_counter", "time"],  # Time variable may be 'time_counter' or 'time'
-    "salinity": ["so","sn","soce", "salinity"],  # Example for salinity variable
+    "time_counter": [
+        "time_counter",
+        "time",
+    ],  # Time variable may be 'time_counter' or 'time'
+    "salinity": ["so", "sn", "soce", "salinity"],  # Example for salinity variable
     "density": ["rhop", "density"],  # Density might be named 'rhop' or 'density'
     # Add more mappings if necessary depending on your datasets
 }
@@ -53,10 +76,9 @@ def standardize_variables(dataset, variable_dict):
     dataset = dataset.rename(rename_map)
 
     # Explicitly handle renaming of 'x' and 'y' dimensions to 'nav_lon' and 'nav_lat'
-    if 'x' in dataset.dims:
-        dataset = dataset.rename({'x': 'nav_lon'})
-    if 'y' in dataset.dims:
-        dataset = dataset.rename({'y': 'nav_lat'})
+    if "x" in dataset.dims:
+        dataset = dataset.rename({"x": "nav_lon"})
+    if "y" in dataset.dims:
+        dataset = dataset.rename({"y": "nav_lat"})
 
     return dataset
-
