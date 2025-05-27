@@ -1,47 +1,34 @@
-"""Core metrics functions to evaluate the simulations and projections."""
+"""Core metrics functions to evaluate physical consistency of simulations and projections."""
 
 import xarray
 
 
-# def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
-#     """
-#     Return the proportion of points not respecting the density decreasing constraint.
-
-#     The density should decrease with depth, so the difference between the density at
-#     a given depth and the density at the next depth should be negative.
-
-#     Parameters
-#     ----------
-#     density : xarray.DataArray
-#         DataArray (t, depth, lat, lon) with density value for each point of the
-#         grid.
-#     epsilon : float
-#         Threshold for the density difference. Default is 1e-5.
-
-#     Returns
-#     -------
-#     float
-#         Proportion of points not respecting density decreasing constraint
-#     """
-#     density = density.where(density != 0)
-#     diff = density - density.shift(depth=-1)
-#     return (
-#         (diff > epsilon).mean().data
-#     )  # Proportion of points not respecting decreasing density
-
-
 def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     """
-    Return, for each time step, the proportion of grid points whose density
-    fails the monotonic-with-depth constraint.
+    Check density monotonicity violations in ocean data.
+
+    Calculate the proportion of grid points at each time step where
+    the density profile violates the monotonic-with-depth constraint.
+
+    Parameters
+    ----------
+    density : xarray.DataArray
+        A 4D DataArray with dimensions including 'time_counter', 'depth',
+        'nav_lat', and 'nav_lon'. Represents the density field over time and space.
+    epsilon : float, optional
+        A small threshold used to determine significant non-monotonicity.
+        Default is 1e-5.
+
+    Returns
+    -------
+    xarray.DataArray
+        A 1D DataArray with dimension 'time_counter', containing the proportion
+        of grid points (per time step) where density increases with depth
+        beyond the epsilon threshold.
     """
     density = density.where(density != 0)
     diff = density - density.shift(depth=-1)
-
-    # average only over the spatial dimensions, keep 'time_counter'
     bad_prop = (diff > epsilon).mean(dim=["depth", "nav_lat", "nav_lon"])
-
-    # return the DataArray (one value per time step)
     return bad_prop
 
 
@@ -228,7 +215,6 @@ def ACC_Drake_metric(uo, file_mask):
 
     ubar = u_masked * e3u_masked
     flux = (e2u_masked * ubar).sum(dim=["nav_lat", "depth"])
-
     # Returning Total Transport across Drake passage as a numpy scalar (unit : Sv)
     return flux / 1e6
 
