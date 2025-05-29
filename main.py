@@ -1,6 +1,7 @@
 """Evaluate grid files using physical metrics."""
 
 import argparse
+import csv
 import os
 import sys
 
@@ -161,33 +162,32 @@ def apply_metrics_grid(
 
 def write_metric_results(results, output_filepath):
     """
-    Output the results of the metrics to a file and print them.
+    Output the results of the metrics to a CSV file and print them.
 
     Parameters
     ----------
     results : dict
         The results of the metrics.
     output_filepath : str
-        The path to the output file.s
+        The path to the output CSV file.
     """
-    with open(output_filepath, "w") as f:
+    with open(output_filepath, mode="w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Metric", "Value"])  # CSV header
+
         for name, result in results.items():
             try:
                 # Convert result to scalar if possible
                 value = result.item() if hasattr(result, "item") else result
 
-                # Format floats and ints with precision
+                # Format floats with precision
                 if isinstance(value, float):
-                    line = f"{name}: {value:.6f}"
-                elif isinstance(value, int):
-                    line = f"{name}: {value}"
-                else:
-                    line = f"{name}: {value}"
+                    value = f"{value:.6f}"
             except (TypeError, ValueError, AttributeError):
-                line = f"{name}: {result}"
+                value = str(result)
 
-            f.write(line + "\n")
-            print(line)
+            writer.writerow([name, value])
+            print(f"{name}: {value}")
 
     print(f"\n Successfully wrote metrics to '{output_filepath}'")
 
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=str,
-        help="Path to save output metric values (default: metrics_results.txt)",
+        help="Path to save output metric values (default: metrics_results.csv)",
     )
 
     args = parser.parse_args()
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     if args.restart and not args.grid_T:
         restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
         results = apply_metrics_restart(restart, mesh_mask)
-        write_metric_results(results, "results/metrics_results_restart.txt")
+        write_metric_results(results, "results/metrics_results_restart.csv")
     else:
         restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
         data_grid_T, mesh_mask = read_data(
@@ -285,7 +285,7 @@ if __name__ == "__main__":
             restart,
             mesh_mask,
         )
-        write_metric_results(results, "results/metrics_results_grid.txt")
+        write_metric_results(results, "results/metrics_results_grid.csv")
 
 
 ##################################
