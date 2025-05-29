@@ -1,4 +1,4 @@
-"""Core metrics functions to evaluate physical consistency of simulations and projections."""
+"""Core metrics to evaluate physical consistency of simulations and projections."""
 
 import xarray
 
