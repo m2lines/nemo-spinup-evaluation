@@ -1,8 +1,10 @@
 """Evaluate grid files using physical metrics."""
 
 import argparse
+import csv
 import os
 import sys
+from collections import defaultdict
 
 import xarray as xr
 
@@ -161,35 +163,58 @@ def apply_metrics_grid(
 
 def write_metric_results(results, output_filepath):
     """
-    Output the results of the metrics to a file and print them.
+    Output the results of the metrics to a CSV file with time_counter as index.
 
     Parameters
     ----------
     results : dict
-        The results of the metrics.
+        The results of the metrics (some can be time series).
     output_filepath : str
-        The path to the output file.s
+        The path to the output CSV file.
     """
-    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
+    indexed_data = defaultdict(dict)
+    time_labels = []
+    static_metrics = {}
 
-    with open(output_filepath, "w") as f:
-        for name, result in results.items():
-            try:
-                # Convert result to scalar if possible
-                value = result.item() if hasattr(result, "item") else result
+    # Find any one DataArray with time_counter to use its time index
+    time_array = None
+    for result in results.values():
+        if isinstance(result, xr.DataArray) and "time_counter" in result.dims:
+            time_array = result["time_counter"]
+            break
 
-                # Format floats and ints with precision
-                if isinstance(value, float):
-                    line = f"{name}: {value:.6f}"
-                elif isinstance(value, int):
-                    line = f"{name}: {value}"
-                else:
-                    line = f"{name}: {value}"
-            except (TypeError, ValueError, AttributeError):
-                line = f"{name}: {result}"
+    if time_array is not None:
+        time_labels = [t.values for t in time_array]
 
-            f.write(line + "\n")
-            print(line)
+    for name, result in results.items():
+        if isinstance(result, xr.DataArray) and "time_counter" in result.dims:
+            for i, val in enumerate(result.values):
+                indexed_data[i][name] = f"{val:.6f}"
+        else:
+            val = result.item() if hasattr(result, "item") else result
+            static_metrics[name] = f"{val:.6f}" if isinstance(val, float) else str(val)
+
+    # Define header
+    header = [
+        "timestamp",
+        "check_density_from_file",
+        "check_density_computed",
+        "temperature_500m_30NS_metric",
+        "temperature_BWbox_metric",
+        "temperature_DWbox_metric",
+        "ACC_Drake_metric",
+        "NASTG_BSF_max",
+    ]
+
+    with open(output_filepath, mode="w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(header)
+
+        for i in sorted(indexed_data.keys()):
+            row = [time_labels[i] if i < len(time_labels) else ""]
+            for metric in header[1:]:
+                row.append(indexed_data[i].get(metric, static_metrics.get(metric, "")))
+            writer.writerow(row)
 
     print(f"\n Successfully wrote metrics to '{output_filepath}'")
 
@@ -234,7 +259,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output",
         type=str,
-        help="Path to save output metric values (default: metrics_results.txt)",
+        help="Path to save output metric values (default: metrics_results.csv)",
     )
 
     args = parser.parse_args()
@@ -263,7 +288,7 @@ if __name__ == "__main__":
     if args.restart and not args.grid_T:
         restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
         results = apply_metrics_restart(restart, mesh_mask)
-        write_metric_results(results, "results/metrics_results_restart.txt")
+        write_metric_results(results, "results/metrics_results_restart.csv")
     else:
         restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
         data_grid_T, mesh_mask = read_data(
@@ -287,7 +312,7 @@ if __name__ == "__main__":
             restart,
             mesh_mask,
         )
-        write_metric_results(results, "results/metrics_results_grid.txt")
+        write_metric_results(results, "results/metrics_results_grid.csv")
 
 
 ##################################
