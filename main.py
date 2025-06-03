@@ -25,13 +25,13 @@ def read_data(datafilepath, maskfilepath, variable_dict):
 
     print(f"The provided file is: {filename}\n")
 
-    # Determine whether to decode CF conventions
-    decode_cf = not any(
-        key in filename for key in ["grid_T", "grid_T_sampled", "grid_U", "grid_V"]
-    )
+    # # Determine whether to decode CF conventions
+    # decode_cf = not any(
+    #     key in filename for key in ["grid_T", "grid_T_sampled", "grid_U", "grid_V"]
+    # )
 
     # Open the dataset
-    data = xr.open_dataset(datafilepath, decode_cf=decode_cf)
+    data = xr.open_dataset(datafilepath)
 
     data = standardize_variables(data, variable_dict)
 
@@ -187,7 +187,7 @@ def write_metric_results(results, output_filepath):
                 value = str(result)
 
             writer.writerow([name, value])
-            print(f"{name}: {value}")
+            # print(f"{name}: {value}")
 
     print(f"\n Successfully wrote metrics to '{output_filepath}'")
 
