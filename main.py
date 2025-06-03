@@ -26,13 +26,13 @@ def read_data(datafilepath, maskfilepath, variable_dict):
 
     print(f"The provided file is: {filename}\n")
 
-    # Determine whether to decode CF conventions
-    decode_cf = not any(
-        key in filename for key in ["grid_T", "grid_T_sampled", "grid_U", "grid_V"]
-    )
+    # # Determine whether to decode CF conventions
+    # decode_cf = not any(
+    #     key in filename for key in ["grid_T", "grid_T_sampled", "grid_U", "grid_V"]
+    # )
 
     # Open the dataset
-    data = xr.open_dataset(datafilepath, decode_cf=decode_cf)
+    data = xr.open_dataset(datafilepath)
 
     data = standardize_variables(data, variable_dict)
 
