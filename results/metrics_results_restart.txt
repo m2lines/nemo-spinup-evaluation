@@ -1,7 +1,0 @@
-check_density_from_file: 0.000020
-check_density_computed: 0.000032
-temperature_500m_30NS_metric: 3.236497
-temperature_BWbox_metric: 12.828081
-temperature_DWbox_metric: 0.007553
-ACC_Drake_metric: 188.689106
-NASTG_BSF_max: 59.839730
