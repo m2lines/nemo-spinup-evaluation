@@ -5,8 +5,11 @@ import csv
 import os
 import sys
 from collections import defaultdict
+import yaml
+from pathlib import Path
 
 import xarray as xr
+import pandas as pd
 
 from src.metrics import (
     ACC_Drake_metric,
@@ -161,6 +164,26 @@ def apply_metrics_grid(
     return results
 
 
+def read_grid_files(
+    grid_T_path, grid_T_sampled_path, grid_U_path, grid_V_path, mesh_mask_path
+):
+    """Read grid files and return standardized datasets."""
+    data_grid_T, _ = read_data(grid_T_path, mesh_mask_path, VARIABLE_ALIASES)
+    data_grid_T_sampled, _ = read_data(
+        grid_T_sampled_path, mesh_mask_path, VARIABLE_ALIASES
+    )
+    data_grid_T_sampled["time_counter"] = data_grid_T["time_counter"]
+    data_grid_U, _ = read_data(grid_U_path, mesh_mask_path, VARIABLE_ALIASES)
+    data_grid_V, _ = read_data(grid_V_path, mesh_mask_path, VARIABLE_ALIASES)
+
+    return {
+        "grid_T": data_grid_T,
+        "grid_T_sampled": data_grid_T_sampled,
+        "grid_U": data_grid_U,
+        "grid_V": data_grid_V,
+    }
+
+
 def write_metric_results(results, output_filepath):
     """
     Output the results of the metrics to a CSV file with time_counter as index.
@@ -221,40 +244,11 @@ def write_metric_results(results, output_filepath):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Compute climate model diagnostics from a restart file and \
-        mesh_mask."
-    )
-
-    parser.add_argument(
-        "--restart",
-        type=str,
-        help="Path to the model restart file (e.g., restart.nc)",
+        description="Compute climate model diagnostics from output files or \
+            checkpoint files."
     )
     parser.add_argument(
-        "--grid_T",
-        type=str,
-        help="Path to the NEMO grid_T file (e.g., _grid_T.nc)",
-    )
-    parser.add_argument(
-        "--grid_T_sampled",
-        type=str,
-        help="Path to save output metric values (e.g., _grid_T_sampled.nc)",
-    )
-    parser.add_argument(
-        "--grid_U",
-        type=str,
-        help="Path to the NEMO grid_U file (e.g., _grid_U.nc)",
-    )
-    parser.add_argument(
-        "--grid_V",
-        type=str,
-        help="Path to the NEMO grid_V file (e.g., _grid_V.nc)",
-    )
-    parser.add_argument(
-        "--mesh-mask",
-        type=str,
-        required=True,
-        help="Path to the NEMO mesh mask file (e.g., mesh_mask.nc)",
+        "--config", type=str, required=True, help="Path to YAML config file"
     )
     parser.add_argument(
         "--output",
@@ -264,55 +258,124 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Ensure at least one of the inputs is provided
-    if not args.restart and not (
-        args.grid_T and args.grid_T_sampled and args.grid_U and args.grid_V
-    ):
-        print("Error: You must give path to either restart file or grid files.")
-        parser.print_help()
+    # Load YAML config
+    with open(args.config, "r") as f:
+        config = yaml.safe_load(f)
+
+    mesh_mask = config.get("mesh_mask")
+
+    if mesh_mask:
+        mesh_mask_path = Path(mesh_mask)
+        if not mesh_mask_path.exists():
+            print(f"Mesh file '{mesh_mask_path}' does not exist.")
+            sys.exit(1)
+    else:
+        print("No mesh file provided.")
         sys.exit(1)
 
-    # Collect files paths based on arguments provided
-    data_files = []
-    if args.restart:
-        data_files.append(args.restart)
-    if args.grid_T:
-        data_files.append(args.grid_T)
-    if args.grid_T_sampled:
-        data_files.append(args.grid_T_sampled)
-    if args.grid_U:
-        data_files.append(args.grid_U)
-    if args.grid_V:
-        data_files.append(args.grid_V)
+    # Restart file
+    restart = config.get("restart")
+    # check if restart file exists
+    if restart:
+        restart = Path(restart)
+        if not restart.exists():
+            print(f"Restart file '{restart}' does not exist.")
+            sys.exit(1)
+    else:
+        print("No restart file provided.")
 
-    if args.restart and not args.grid_T:
-        restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
+    # this needs to be moved to a new function
+    # the checks is on has_all_grids.
+
+    # Grid files
+    grid_files = config.get("grid_files")
+    required_grid_keys = ["grid_T", "grid_T_sampled", "grid_U", "grid_V"]
+    grid_paths = {k: Path(grid_files.get(k, "")) for k in required_grid_keys}
+    has_all_grids = all(p.exists() for p in grid_paths.values())
+
+    # Reference grid files
+    ref_grid_files = config.get("reference_grid_files")
+    ref_grid_paths = {k: Path(ref_grid_files.get(k, "")) for k in required_grid_keys}
+    has_all_grids = all(p.exists() for p in ref_grid_paths.values())
+
+    if not has_all_grids and not restart:
+        print(
+            "At least one grid file is required (grid_T, grid_T_sampled, grid_U, grid_V\
+            ) or a restart file."
+        )
+        sys.exit(1)
+
+    if restart and not has_all_grids:
+        restart, mesh_mask = read_data(restart, mesh_mask_path, VARIABLE_ALIASES)
         results = apply_metrics_restart(restart, mesh_mask)
         write_metric_results(results, "results/metrics_results_restart.csv")
     else:
-        restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
-        data_grid_T, mesh_mask = read_data(
-            args.grid_T, args.mesh_mask, VARIABLE_ALIASES
+        restart, mesh_mask = read_data(restart, mesh_mask_path, VARIABLE_ALIASES)
+        data = read_grid_files(
+            grid_paths["grid_T"],
+            grid_paths["grid_T_sampled"],
+            grid_paths["grid_U"],
+            grid_paths["grid_V"],
+            mesh_mask_path,
         )
-        data_grid_T_sampled, mesh_mask = read_data(
-            args.grid_T_sampled, args.mesh_mask, VARIABLE_ALIASES
-        )
-        data_grid_T_sampled["time_counter"] = data_grid_T["time_counter"]
-        data_grid_U, mesh_mask = read_data(
-            args.grid_U, args.mesh_mask, VARIABLE_ALIASES
-        )
-        data_grid_V, mesh_mask = read_data(
-            args.grid_V, args.mesh_mask, VARIABLE_ALIASES
-        )
+
         results = apply_metrics_grid(
-            data_grid_T,
-            data_grid_T_sampled,
-            data_grid_U,
-            data_grid_V,
+            data["grid_T"],
+            data["grid_T_sampled"],
+            data["grid_U"],
+            data["grid_V"],
             restart,
             mesh_mask,
         )
-        write_metric_results(results, "results/metrics_results_grid.csv")
+
+        data_ref = read_grid_files(
+            grid_paths["grid_T"],
+            grid_paths["grid_T_sampled"],
+            grid_paths["grid_U"],
+            grid_paths["grid_V"],
+            mesh_mask_path,
+        )
+
+        results_ref = apply_metrics_grid(
+            data_ref["grid_T"],
+            data_ref["grid_T_sampled"],
+            data_ref["grid_U"],
+            data_ref["grid_V"],
+            restart,
+            mesh_mask,
+        )
+
+        # rename results_ref keys to include 'ref_' prefix
+        results_ref = {f"ref_{key}": value for key, value in results_ref.items()}
+
+        # compute differences between results and reference results
+        results_diff = {}
+        results_stats = {}
+        for key in results:
+            # compute MAE and RMSE using xarrays
+            results_diff[f"diff_{key}_ae"] = results[key] - results_ref[f"ref_{key}"]
+            results_stats[f"diff_{key}_mae"] = (
+                results[key].mean() - results_ref.get(f"ref_{key}", 0).mean()
+            )
+            results_stats[f"diff_{key}_rmse"] = (
+                (results[key] - results_ref.get(f"ref_{key}", 0)) ** 2
+            ).mean() ** 0.5
+
+        # now append all results together
+        results.update(results_ref)
+        results.update(results_diff)
+
+        time_array = data["grid_T"].get("time_counter", None)
+        # convert results to dataframe
+        results_df = pd.DataFrame(results)
+        # add time_counter as index if available
+        if time_array is not None:
+            results_df["timestamp"] = time_array.values
+            results_df.set_index("timestamp", inplace=True)
+
+        results_df.to_csv("results/metrics_results_grid_2.csv", index=True)
+
+        # write_metric_results(results, "results/metrics_results_grid.csv")
 
 
 ##################################

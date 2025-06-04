@@ -1,0 +1,19 @@
+# DINO_config.yaml
+restart: ../../spinup-data/nemo-raw/DINO_00576000_restart.nc  # optional
+mesh_mask: ../../spinup-data/nemo-raw/mesh_mask.nc
+
+# ignored if option=restart
+
+grid_files:
+  grid_T_sampled: ../../spinup-data/nemo-raw/DINO_1m_To_1y_grid_T.nc
+  grid_T: ../../spinup-data/nemo-raw/DINO_1y_grid_T.nc
+  grid_U: ../../spinup-data/nemo-raw/DINO_1y_grid_U.nc
+  grid_V: ../../spinup-data/nemo-raw/DINO_1y_grid_V.nc
+  grid_W: ../../spinup-data/nemo-raw/DINO_1y_grid_W.nc
+
+reference_grid_files:
+  grid_T_sampled: ../../spinup-data/nemo-raw/DINO_1m_To_1y_grid_T.nc
+  grid_T: ../../spinup-data/nemo-raw/DINO_1y_grid_T.nc
+  grid_U: ../../spinup-data/nemo-raw/DINO_1y_grid_U.nc
+  grid_V: ../../spinup-data/nemo-raw/DINO_1y_grid_V.nc
+  grid_W: ../../spinup-data/nemo-raw/DINO_1y_grid_W.nc

@@ -1,0 +1,14 @@
+# DINO_config.yaml
+restart: path/to/restart.nc # optional
+mesh_mask: path/to/mesh_mask.nc
+
+# ignored if option=restart
+grid_files:
+  T: path/to/_grid_T.nc
+  T_ref: path/to/_grid_T_ref.nc
+  T_sampled: path/to/_grid_T_sampled.nc
+  T_sampled_ref: path/to_grid_T_sampled_ref.nc
+  U: path/to/_grid_U.nc
+  U_ref: path/to/_grid_U_ref.nc
+  V: path/to/_grid_V.nc
+  V_ref: path/to/_grid_V_ref.nc
