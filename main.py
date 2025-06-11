@@ -6,6 +6,7 @@ import os
 import sys
 import glob
 from collections import defaultdict
+import yaml
 
 import xarray as xr
 
@@ -49,7 +50,7 @@ def load_output_files(setup: dict, path: str) -> dict[str, xr.Dataset]:
         # TODO: check if the file exists
         if not os.path.exists(os.path.join(path, filename)):
             raise FileNotFoundError(f"File {filename} not found in path {path}.")
-        output_data[field] = xr.open_dataset(os.join(path, filename))
+        output_data[field] = xr.open_dataset(os.path.join(path, filename))
     return output_data
 
 
@@ -91,23 +92,27 @@ def load_dino_outputs(
     if mode in ["restart", "both"]:
         # get the restart path using glob in path - it ends with restart.nc
         # open a file that ends with restart.nc
-        restart_path = glob.glob(os.path.join(path, "*restart.nc"))
+        restart_path = glob.glob(os.path.join(path, "*restart.nc"))[0]
+        print(f"Restart path: {restart_path}")
         data["restart"] = xr.open_dataset(restart_path)
 
     # Optional: grid T, U, V, and sampled T
-    if mode in ["output", "both"] and "output_files" in setup:
-        setup_output = setup["output_files"]
+    if mode in ["output", "both"] and "output_variables" in setup:
+        # check if output_variables is
+        setup_output = setup["output_variables"]
         data["output"] = load_output_files(setup_output, path)
 
     # now standardise the data
     for key, dataset in data.items():
         if isinstance(dataset, xr.Dataset):
             data[key] = standardize_variables(dataset, VARIABLE_ALIASES)
-        elif isinstance(dataset, list):  # e.g., output files
+        elif isinstance(dataset, dict):  # e.g., output files
             data[key] = {
                 k: standardize_variables(v, VARIABLE_ALIASES)
                 for k, v in dataset.items()
             }
+
+    # print(data)
     return data
 
 
@@ -132,7 +137,7 @@ def apply_metrics_restart(data, mask):
         "check_density_from_file": lambda d: check_density(d["density"][0]),
         "check_density_computed": lambda d: check_density(
             get_density(
-                d["temperature"], d["salinity"], get_depth(restart, mask), mask["tmask"]
+                d["temperature"], d["salinity"], get_depth(data, mask), mask["tmask"]
             )[0]
         ),
         "temperature_500m_30NS_metric": lambda d: temperature_500m_30NS_metric(
@@ -332,8 +337,6 @@ if __name__ == "__main__":
 
     if args.sim_path:
         # Load DINO-sim.yaml to get expected DINO files
-        import yaml
-
         yaml_file = "DINO-setup.yaml"
         if not os.path.exists(yaml_file):
             print(f"Error: The file {yaml_file} does not exist.")
@@ -343,15 +346,19 @@ if __name__ == "__main__":
         # Collect files based on the yaml mapping
 
     data = load_dino_outputs(args.mode, args.sim_path, dino_setup, VARIABLE_ALIASES)
-    if args.mode == "restart":
+    if args.mode in ["restart", "both"]:
         results = apply_metrics_restart(data["restart"], data["mesh_mask"])
         write_metric_results(results, "results/metrics_results_restart.csv")
     else:
+        # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
+        grid_output = data["output"]
+        # extract res
+        # use magic operator to pass to function.
         results = apply_metrics_output(
-            data["temp"],
-            data["salinity"],
-            data["U"],
-            data["V"],
+            grid_output["T"],
+            grid_output["T_sampled"],
+            grid_output["u"],
+            grid_output["v"],
             data["restart"],
             data["mesh_mask"],
         )
