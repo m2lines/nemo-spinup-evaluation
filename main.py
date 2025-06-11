@@ -22,35 +22,23 @@ from src.utils import get_density, get_depth
 from variable_aliases import VARIABLE_ALIASES, standardize_variables
 
 
-def read_DINO_re(datafilepath, maskfilepath, variable_dict, mode):
-    """Read the data and mask files and standardize variable names."""
-    filename = os.path.basename(datafilepath)
-
-    print(f"The provided file is: {filename}\n")
-
-    # # Determine whether to decode CF conventions
-    # decode_cf = not any(
-    #     key in filename for key in ["grid_T", "grid_T_sampled", "grid_U", "grid_V"]
-    # )
-
-    # Open the dataset or restart file
-    data = xr.open_dataset(datafilepath)
-    data = standardize_variables(data, variable_dict)
-
-    # Open and standardize the mesh mask
-    mesh_mask = xr.open_dataset(maskfilepath)
-    mesh_mask = standardize_variables(mesh_mask, variable_dict)
-
-    return data, mesh_mask
-
-
 def load_output_files(setup: dict, path: str) -> dict[str, xr.Dataset]:
+    """Load output files based on the setup configuration."""
     output_data = {}
     for field, filename in setup.items():
         # TODO: check if the file exists
         if not os.path.exists(os.path.join(path, filename)):
             raise FileNotFoundError(f"File {filename} not found in path {path}.")
-        output_data[field] = xr.open_dataset(os.path.join(path, filename))
+        if field == "T_sampled":
+            # Special case for T_sampled, which is sampled from T grid
+            data_grid_T = xr.open_dataset(os.path.join(path, setup["T"]))
+            data_grid_T_sampled = xr.open_dataset(os.path.join(path, filename))
+            data_grid_T_sampled["time_counter"] = data_grid_T["time_counter"]
+            output_data[field] = data_grid_T_sampled
+        else:
+            output_data[field] = xr.open_dataset(os.path.join(path, filename))
+        # make a correction here: if field is 'T_sampled'
+
     return output_data
 
 
@@ -71,13 +59,17 @@ def load_dino_outputs(
 ) -> dict[str, xr.Dataset]:
     """Load DINO model inputs based on YAML configuration.
 
-    Args:
-        config (dict): Parsed YAML config containing mesh_mask, restart_files,
-        output_files, etc.
+    Parameters
+    ----------
+    config (dict)
+        Parsed YAML config containing mesh_mask, restart_files,
+    output_files, etc.
 
-    Returns:
-        dict[str, xr.Dataset]: Dictionary mapping source (e.g., 'mesh_mask', 'restart',
-         'output') to xarray datasets or variables.
+    Returns
+    -------
+    dict[str, xr.Dataset]
+        Dictionary mapping source (e.g., 'mesh_mask', 'restart',
+    'output') to xarray datasets or variables.
     """
     data = {}
 
@@ -93,7 +85,6 @@ def load_dino_outputs(
         # get the restart path using glob in path - it ends with restart.nc
         # open a file that ends with restart.nc
         restart_path = glob.glob(os.path.join(path, "*restart.nc"))[0]
-        print(f"Restart path: {restart_path}")
         data["restart"] = xr.open_dataset(restart_path)
 
     # Optional: grid T, U, V, and sampled T
@@ -349,10 +340,10 @@ if __name__ == "__main__":
     if args.mode in ["restart", "both"]:
         results = apply_metrics_restart(data["restart"], data["mesh_mask"])
         write_metric_results(results, "results/metrics_results_restart.csv")
-    else:
+    if args.mode in ["output", "both"]:
         # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
         grid_output = data["output"]
-        # extract res
+
         # use magic operator to pass to function.
         results = apply_metrics_output(
             grid_output["T"],
