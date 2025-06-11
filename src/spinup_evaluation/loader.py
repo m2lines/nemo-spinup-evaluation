@@ -62,7 +62,7 @@ def _normalise_var_specs(
 
     Accepts either:
       simple form:  {"temperature": "grid_T_3D.nc"}
-      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "teoce",
+      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "toce",
       "time_from" : "density"}
 
     Returns canonical mapping:
