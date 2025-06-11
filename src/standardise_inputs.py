@@ -38,7 +38,7 @@ VARIABLE_ALIASES = {
 }
 
 
-def standardize_variables(dataset, variable_dict):
+def standardise(dataset, variable_dict):
     """
     Standardizes variable, coordinate, and dimension names across datasets.
 
