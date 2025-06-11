@@ -7,6 +7,7 @@ import sys
 import glob
 from collections import defaultdict
 import yaml
+import pandas as pd
 
 import xarray as xr
 
@@ -293,7 +294,7 @@ if __name__ == "__main__":
         help="Path to the NEMO simulation directory",
     )
     parser.add_argument(
-        "--ref-sim-path",
+        "--ref-path",
         type=str,
         help="Path to the reference NEMO simulation directory",
     )
@@ -314,7 +315,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Ensure at least one of the inputs is provided
-    if not args.sim_path and not args.ref_sim_path:
+    if not args.sim_path and not args.ref_path:
         print("Error: You must give a path to a directory.")
         parser.print_help()
         sys.exit(1)
@@ -338,13 +339,25 @@ if __name__ == "__main__":
         # Collect files based on the yaml mapping
 
     data = load_dino_outputs(args.mode, args.sim_path, dino_setup, VARIABLE_ALIASES)
+
+    # If ref_sim_path is provided, load reference outputs
+    comparison = args.ref_path is not None
+
+    if comparison:
+        data_ref = load_dino_outputs(
+            args.mode, args.ref_path, dino_setup, VARIABLE_ALIASES
+        )
+
     if args.mode in ["restart", "both"]:
         results = apply_metrics_restart(data["restart"], data["mesh_mask"])
-        write_metric_results(results, "results/metrics_results_restart.csv")
+        if comparison:
+            ref_results = apply_metrics_restart(
+                data_ref["restart"], data_ref["mesh_mask"]
+            )
+
     if args.mode in ["output", "both"]:
         # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
         grid_output = data["output"]
-
         # use magic operator to pass to function.
         results = apply_metrics_output(
             grid_output["T"],
@@ -354,7 +367,47 @@ if __name__ == "__main__":
             data["restart"],
             data["mesh_mask"],
         )
-        write_metric_results(results, "results/metrics_results_grid.csv")
+
+        if comparison:
+            grid_output_ref = data_ref["output"]
+            results_ref = apply_metrics_output(
+                grid_output_ref["T"],
+                grid_output_ref["T_sampled"],
+                grid_output_ref["u"],
+                grid_output_ref["v"],
+                data_ref["restart"],
+                data_ref["mesh_mask"],
+            )
+        # write_metric_results(results, "results/metrics_results_grid.csv")
+
+        results_ref = {f"ref_{key}": value for key, value in results_ref.items()}
+
+        # compute differences between results and reference results
+        results_diff = {}
+        results_stats = {}
+        for key in results:
+            # compute MAE and RMSE using xarrays
+            results_diff[f"diff_{key}_ae"] = results[key] - results_ref[f"ref_{key}"]
+            results_stats[f"diff_{key}_mae"] = (
+                results[key].mean() - results_ref.get(f"ref_{key}", 0).mean()
+            )
+            results_stats[f"diff_{key}_rmse"] = (
+                (results[key] - results_ref.get(f"ref_{key}", 0)) ** 2
+            ).mean() ** 0.5
+
+        # now append all results together
+        results.update(results_ref)
+        results.update(results_diff)
+
+        time_array = grid_output["T"].get("time_counter", None)
+        # convert results to dataframe
+        results_df = pd.DataFrame(results)
+        # add time_counter as index if available
+        if time_array is not None:
+            results_df["timestamp"] = time_array.values
+            results_df.set_index("timestamp", inplace=True)
+
+        results_df.to_csv("results/metrics_results_grid_2.csv", index=True)
 
 
 ##################################
