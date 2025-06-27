@@ -329,7 +329,9 @@ if __name__ == "__main__":
 
     if args.sim_path:
         # Load DINO-sim.yaml to get expected DINO files
-        yaml_file = "DINO-setup.yaml"
+        # yaml_file = "DINO-setup.yaml"
+        yaml_file = os.path.join(args.sim_path, "DINO-setup.yaml")
+
         if not os.path.exists(yaml_file):
             print(f"Error: The file {yaml_file} does not exist.")
             sys.exit(1)
@@ -412,12 +414,7 @@ if __name__ == "__main__":
 ##################################
 ### Command to run grid files ####
 ##################################
-# python3 main.py --restart ../nc_files/nc_files/DINO_00576000_restart.nc
-#                 --grid_T ../nc_files/nc_files/DINO_1y_grid_T.nc
-#                 --grid_T_sampled ../nc_files/nc_files/DINO_1m_To_1y_grid_T.nc
-#                 --grid_U ../nc_files/nc_files/DINO_1y_grid_U.nc
-#                 --grid_V ../nc_files/nc_files/DINO_1y_grid_V.nc
-#                 --mesh-mask ../nc_files/nc_files/mesh_mask.nc
+# python3 main.py --sim-path=../spinup-data/nemo-raw/ --ref-path=../spinup-data/nemo-raw/ --mode both
 
 ##################################
 ### Command to run restart files ####
