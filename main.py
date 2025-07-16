@@ -328,11 +328,12 @@ if __name__ == "__main__":
 
     if args.sim_path:
         # Load DINO-sim.yaml to get expected DINO files
-        yaml_file = "DINO-setup.yaml"
-        if not os.path.exists(yaml_file):
-            print(f"Error: The file {yaml_file} does not exist.")
+        # point to the config file in the configs directory
+        config_file = os.path.join("configs", "DINO-setup.yaml")
+        if not os.path.exists(config_file):
+            print(f"Error: The file {config_file} does not exist.")
             sys.exit(1)
-        with open(yaml_file, "r") as file:
+        with open(config_file, "r") as file:
             dino_setup = yaml.safe_load(file)
         # Collect files based on the yaml mapping
 
