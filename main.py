@@ -307,7 +307,6 @@ if __name__ == "__main__":
             )
 
             results_ref = {f"ref_{key}": value for key, value in results_ref.items()}
-        # breakpoint()
 
         output_filepath = args.results or "metrics_results_restart.csv"
         write_metrics_to_csv(
