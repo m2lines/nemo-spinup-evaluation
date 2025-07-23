@@ -155,7 +155,7 @@ def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Returns
     -------
-    float
+    xarray.DataArray
        np.float32 or np.float64 depending on recording precision of simulation files.
     """
     e1t = file_mask.e1t.squeeze()

@@ -19,8 +19,9 @@ from src.metrics import (
     temperature_BWbox_metric,
     temperature_DWbox_metric,
 )
-from src.utils import get_density, get_depth
-from variable_aliases import VARIABLE_ALIASES, standardize_variables
+from src.utils import get_density, get_depth, sanitize_metrics_dict
+from src.metrics_io import write_metrics_to_csv
+from src.variable_aliases import VARIABLE_ALIASES, standardize_variables
 
 
 def load_output_files(setup: dict, path: str) -> dict[str, xr.Dataset]:
@@ -94,6 +95,8 @@ def load_dino_outputs(
         setup_output = setup["output_variables"]
         data["output"] = load_output_files(setup_output, path)
 
+        # check if restart is provided
+
     # now standardise the data
     for key, dataset in data.items():
         if isinstance(dataset, xr.Dataset):
@@ -104,7 +107,6 @@ def load_dino_outputs(
                 for k, v in dataset.items()
             }
 
-    # print(data)
     return data
 
 
@@ -188,14 +190,6 @@ def apply_metrics_output(
     results = {}
     metric_functions = {
         "check_density_from_file": lambda: check_density(data_grid_T["density"]),
-        "check_density_computed": lambda: check_density(
-            get_density(
-                data_grid_T["temperature"],
-                data_grid_T["salinity"],
-                get_depth(restart, mask),
-                mask["tmask"],
-            )[0]
-        ),
         "temperature_500m_30NS_metric": lambda: temperature_500m_30NS_metric(
             data_grid_T["temperature"], mask
         ),
@@ -213,75 +207,25 @@ def apply_metrics_output(
         ),
     }
 
-    for name, func in metric_functions.items():
+    if restart is not None:
+        metric_functions["check_density_computed"] = lambda: check_density(
+            get_density(
+                data_grid_T["temperature"],
+                data_grid_T["salinity"],
+                get_depth(restart, mask),
+                mask["tmask"],
+            )[0]
+        )
+
+    for name in sorted(metric_functions):
         try:
-            result = func()
+            result = metric_functions[name]()
             results[name] = result
-            # if hasattr(result, "plot"):
-            #     result.plot()
         except (ValueError, TypeError, KeyError, AttributeError, ImportError) as e:
             results[name] = f"Error: {e}"
             print(f"Error in metric {name}: {e}")
 
     return results
-
-
-def write_metric_results(results, output_filepath):
-    """
-    Output the results of the metrics to a CSV file with time_counter as index.
-
-    Parameters
-    ----------
-    results : dict
-        The results of the metrics (some can be time series).
-    output_filepath : str
-        The path to the output CSV file.
-    """
-    indexed_data = defaultdict(dict)
-    time_labels = []
-    static_metrics = {}
-
-    # Find any one DataArray with time_counter to use its time index
-    time_array = None
-    for result in results.values():
-        if isinstance(result, xr.DataArray) and "time_counter" in result.dims:
-            time_array = result["time_counter"]
-            break
-
-    if time_array is not None:
-        time_labels = [t.values for t in time_array]
-
-    for name, result in results.items():
-        if isinstance(result, xr.DataArray) and "time_counter" in result.dims:
-            for i, val in enumerate(result.values):
-                indexed_data[i][name] = f"{val:.6f}"
-        else:
-            val = result.item() if hasattr(result, "item") else result
-            static_metrics[name] = f"{val:.6f}" if isinstance(val, float) else str(val)
-
-    # Define header
-    header = [
-        "timestamp",
-        "check_density_from_file",
-        "check_density_computed",
-        "temperature_500m_30NS_metric",
-        "temperature_BWbox_metric",
-        "temperature_DWbox_metric",
-        "ACC_Drake_metric",
-        "NASTG_BSF_max",
-    ]
-
-    with open(output_filepath, mode="w", newline="") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(header)
-
-        for i in sorted(indexed_data.keys()):
-            row = [time_labels[i] if i < len(time_labels) else ""]
-            for metric in header[1:]:
-                row.append(indexed_data[i].get(metric, static_metrics.get(metric, "")))
-            writer.writerow(row)
-
-    print(f"\n Successfully wrote metrics to '{output_filepath}'")
 
 
 if __name__ == "__main__":
@@ -327,8 +271,10 @@ if __name__ == "__main__":
     # read in contents of yaml file DINO-sim.yaml which maps
     # variables to grid files.
 
+    dino_setup = {}
+
     if args.sim_path:
-        # Load DINO-sim.yaml to get expected DINO files
+        # Load DINO-setup.yaml to get expected DINO files
         # point to the config file in the configs directory
         config_file = os.path.join("configs", "DINO-setup.yaml")
         if not os.path.exists(config_file):
@@ -343,85 +289,86 @@ if __name__ == "__main__":
     # If ref_sim_path is provided, load reference outputs
     comparison = args.ref_path is not None
 
+    data_ref = {}
     if comparison:
         data_ref = load_dino_outputs(
             args.mode, args.ref_path, dino_setup, VARIABLE_ALIASES
         )
 
+    results_ref = {}
     if args.mode in ["restart", "both"]:
-        results = apply_metrics_restart(data["restart"], data["mesh_mask"])
+        print("Applying metrics to restart files...")
+        results = sanitize_metrics_dict(
+            apply_metrics_restart(data["restart"], data["mesh_mask"])
+        )
         if comparison:
-            ref_results = apply_metrics_restart(
-                data_ref["restart"], data_ref["mesh_mask"]
+            results_ref = sanitize_metrics_dict(
+                apply_metrics_restart(data_ref["restart"], data_ref["mesh_mask"])
             )
 
+            results_ref = {f"ref_{key}": value for key, value in results_ref.items()}
+        # breakpoint()
+
+        output_filepath = args.results or "metrics_results_restart.csv"
+        write_metrics_to_csv(
+            results,
+            output_filepath,
+            results_ref=results_ref if comparison else None,
+            time_array=data["restart"].get("time_counter", None),
+        )
+
     if args.mode in ["output", "both"]:
+        print("Applying metrics to output files...")
         # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
         grid_output = data["output"]
         # use magic operator to pass to function.
+        restart = None
+        # data["restart"] might not exist therefore check if it is None
+        if "restart" in data and data["restart"] is not None:
+            restart = data["restart"]
+
         results = apply_metrics_output(
             grid_output["T"],
             grid_output["T_sampled"],
             grid_output["u"],
             grid_output["v"],
-            data["restart"],
+            restart,
             data["mesh_mask"],
         )
-
+        results_ref = {}
         if comparison:
             grid_output_ref = data_ref["output"]
+
+            if "restart" in data_ref and data_ref["restart"] is not None:
+                restart = data_ref["restart"]
+
             results_ref = apply_metrics_output(
                 grid_output_ref["T"],
                 grid_output_ref["T_sampled"],
                 grid_output_ref["u"],
                 grid_output_ref["v"],
-                data_ref["restart"],
+                restart,
                 data_ref["mesh_mask"],
             )
-        # write_metric_results(results, "results/metrics_results_grid.csv")
+            # write_metric_results(results, "results/metrics_results_grid.csv")
+            # rename the results_ref keys to start with ref_ - this avoids collision
+            results_ref = {f"ref_{key}": value for key, value in results_ref.items()}
 
-        results_ref = {f"ref_{key}": value for key, value in results_ref.items()}
+        from src.metrics_io import write_metrics_to_csv
 
-        # compute differences between results and reference results
-        results_diff = {}
-        results_stats = {}
-        for key in results:
-            # compute MAE and RMSE using xarrays
-            results_diff[f"diff_{key}_ae"] = results[key] - results_ref[f"ref_{key}"]
-            results_stats[f"diff_{key}_mae"] = (
-                results[key].mean() - results_ref.get(f"ref_{key}", 0).mean()
-            )
-            results_stats[f"diff_{key}_rmse"] = (
-                (results[key] - results_ref.get(f"ref_{key}", 0)) ** 2
-            ).mean() ** 0.5
-
-        # now append all results together
-        results.update(results_ref)
-        results.update(results_diff)
-
-        time_array = grid_output["T"].get("time_counter", None)
-        # convert results to dataframe
-        results_df = pd.DataFrame(results)
-        # add time_counter as index if available
-        if time_array is not None:
-            results_df["timestamp"] = time_array.values
-            results_df.set_index("timestamp", inplace=True)
-
-        results_df.to_csv("results/metrics_results_grid_2.csv", index=True)
+        output_filepath = args.results or "metrics_results.csv"
+        write_metrics_to_csv(
+            results,
+            output_filepath,
+            results_ref=results_ref if comparison else None,
+            time_array=grid_output["T"].get("time_counter", None),
+        )
 
 
 ##################################
-### Command to run grid files ####
+### Command to run ####
 ##################################
-# python3 main.py --restart ../nc_files/nc_files/DINO_00576000_restart.nc
-#                 --grid_T ../nc_files/nc_files/DINO_1y_grid_T.nc
-#                 --grid_T_sampled ../nc_files/nc_files/DINO_1m_To_1y_grid_T.nc
-#                 --grid_U ../nc_files/nc_files/DINO_1y_grid_U.nc
-#                 --grid_V ../nc_files/nc_files/DINO_1y_grid_V.nc
-#                 --mesh-mask ../nc_files/nc_files/mesh_mask.nc
-
-##################################
-### Command to run restart files ####
-##################################
-# python3 main.py --restart ../nc_files/nc_files/DINO_00576000_restart.nc
-#                 --mesh-mask ../nc_files/nc_files/mesh_mask.nc
+# python3 main.py --sim data/DINO_EXP00/
+#                 --ref data/DINO_EXP00_ref/
+#                 --mode {output, restart, both}
+#                 --results metrics_results.csv
