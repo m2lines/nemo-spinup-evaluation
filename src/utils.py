@@ -1,6 +1,43 @@
 """Utility functions to support metric evaluation."""
 
 import numpy as np
+import xarray as xr
+
+
+def sanitize_metrics_dict(metrics_dict):
+    """
+    Normalize a metrics dictionary so that:
+    - All xarray.DataArrays with time_counter as a coordinate are made into 1D arrays.
+    - Non-time-varying metrics are left as-is.
+    - Unexpected multidimensional metrics are warned about or skipped.
+
+    Returns:
+        dict: sanitized_metrics
+    """
+    sanitized = {}
+
+    for key, val in metrics_dict.items():
+        if isinstance(val, xr.DataArray):
+            if "time_counter" in val.coords and "time_counter" not in val.dims:
+                # Promote 0D DataArray with time_counter coordinate to 1D
+                t = val.coords["time_counter"].values
+                sanitized[key] = xr.DataArray(
+                    [val.values.item()],
+                    coords={"time_counter": [t]},
+                    dims=["time_counter"],
+                )
+            elif "time_counter" in val.dims:
+                # Already a time-varying array — keep as-is
+                sanitized[key] = val
+            elif val.ndim == 0:
+                # Scalar with no time info — keep as-is
+                sanitized[key] = val
+            else:
+                print(f"Skipping metric '{key}': unsupported shape {val.shape}")
+        else:
+            sanitized[key] = val  # scalars, floats, etc.
+
+    return sanitized
 
 
 def get_depth(restart, mask):
