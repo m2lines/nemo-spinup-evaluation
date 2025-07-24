@@ -5,7 +5,7 @@ Spinup-Evaluation documentation
    :maxdepth: 2
    :caption: Contents:
 
-   README  
+   README.md  
 
 .. API Reference
 .. -------------
