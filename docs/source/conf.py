@@ -6,7 +6,7 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))  # assumes your code is in root
+# sys.path.insert(0, os.path.abspath('../'))  # assumes your code is in root
 
 
 # -- Project information -----------------------------------------------------
@@ -21,6 +21,7 @@ release = '2025'
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
+    'myst_parser',
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
