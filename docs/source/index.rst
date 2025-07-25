@@ -6,11 +6,10 @@ Spinup-Evaluation documentation
    :caption: Contents:
 
 
-.. include:: ../../README.md
-   :parser: myst_parser.sphinx_
+   README.md
 
-API Reference
--------------
+Functions and variables
+------------------------
 
 .. automodule:: spinup_eval.main
    :members:
@@ -22,7 +21,7 @@ API Reference
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: spinup_eval.metrics
+.. automodule:: spinup_eval.utils
    :members:
    :undoc-members:
    :show-inheritance:
