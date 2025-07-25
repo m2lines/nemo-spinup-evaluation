@@ -6,7 +6,7 @@
 
 import os
 import sys
-# sys.path.insert(0, os.path.abspath('../'))  # assumes your code is in root
+sys.path.insert(0, os.path.abspath('../..'))  # assumes your code is in root
 
 
 # -- Project information -----------------------------------------------------
@@ -27,6 +27,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx_autodoc_typehints',
 ]
+
+autosummary_generate = True
 
 templates_path = ['_templates']
 exclude_patterns = []
