@@ -5,13 +5,24 @@ Spinup-Evaluation documentation
    :maxdepth: 2
    :caption: Contents:
 
-   README.md
-   Evaluation.md  
 
-.. API Reference
-.. -------------s
+.. include:: ../../README.md
+   :parser: myst_parser.sphinx_
 
-.. .. automodule:: spinup_eval
-..    :members:
-..    :undoc-members:
-..    :show-inheritance:
+API Reference
+-------------
+
+.. automodule:: spinup_eval.main
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: spinup_eval.metrics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: spinup_eval.metrics
+   :members:
+   :undoc-members:
+   :show-inheritance:
