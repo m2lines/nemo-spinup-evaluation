@@ -5,10 +5,11 @@ Spinup-Evaluation documentation
    :maxdepth: 2
    :caption: Contents:
 
-   README.md  
+   README.md
+   Evaluation.md  
 
 .. API Reference
-.. -------------
+.. -------------s
 
 .. .. automodule:: spinup_eval
 ..    :members:
