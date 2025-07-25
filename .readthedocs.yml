@@ -1,7 +1,7 @@
 # Required
 version: 2
 
-# Set the OS, Python version and other tools you might need
+# Set the OS, Python version and other tools
 build:
   os: ubuntu-22.04
   tools:
@@ -9,17 +9,10 @@ build:
 
 sphinx:
   configuration: docs/source/conf.py
-  
+
 python:
   install:
     - method: pip
-      path: .  # This tells RTD to install your project via pyproject.toml
-# Build documentation in the "docs/" directory with Sphinx
-
-
-# # Optional but recommended, declare the Python requirements required
-# # to build your documentation
-# # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
-# python:
-#   install:
-#     - requirements: docs/requirements.txt
+      path: .  
+      
+    - requirements: docs/requirements.txt
