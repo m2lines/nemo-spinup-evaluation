@@ -8,12 +8,6 @@ Spinup-Evaluation was developed to assess the DINO configuration of ocean model 
 ## Code Structure
 The evaluation is performed using the `main.py` script, which calls a set of metrics defined in the `metrics.py` file. The results are saved in a .txt file.
 
-The API is as follows:
-
-- `main.py`: The main script to run the evaluation.
-- `src/metrics.py`: Contains the definitions of the metrics used for evaluation.
-- `src/utils.py`: Contains utility functions for data processing and visualization.
-
 ```plaintext
 
 ├── pyproject.toml         # Build system and tool configuration (e.g. black, ruff)
@@ -25,6 +19,11 @@ The API is as follows:
     └── main.py                # Entry point script
 ```
 
+The API is as follows:
+
+- `main.py`: The main script to run the evaluation.
+- `src/metrics.py`: Contains the definitions of the metrics used for evaluation.
+- `src/utils.py`: Contains utility functions for data processing and visualization.
 
 `main.py` is the entry point for the evaluation process. It takes the following command-line arguments:
 - `--restart`: Path to model restart file.
