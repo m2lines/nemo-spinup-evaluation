@@ -10,16 +10,18 @@ The API is as follows:
 - `src/metrics.py`: Contains the definitions of the metrics used for evaluation.
 - `src/utils.py`: Contains utility functions for data processing and visualization.
 
-<!-- ```plaintext
+```plaintext
 .
-├── main.py                # Entry point script
+├
 ├── pyproject.toml         # Build system and tool configuration (e.g. black, ruff)
 ├── README.md              # Project overview and usage
 ├── LICENSE                # Project license
-└── src/                   # Source code
+└── spinup_eval/                   # Source code
     ├── metrics.py         # Metric calculation functions
-    └── utils.py           # General utilities used across the project
-``` -->
+    ├── utils.py           # General utilities used across the project
+    └── main.py                # Entry point script
+```
+
 
 `main.py` is the entry point for the evaluation process. It takes the following command-line arguments:
 - `--restart`: Path to model restart file.
