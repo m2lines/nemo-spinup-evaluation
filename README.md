@@ -32,7 +32,7 @@ The API is as follows:
 - `--output` : The name of the output file where the metrics are stored. The default is `metric_results.txt`.
 
 
-## Usage [TODO]
+## Using Spinup Evaluation
 This repo is a WIP and usage is subject to change. Figure 1 below shows how the evaluation procedure works in Spinup-Evaluation.
 
 <p align="center">
@@ -40,7 +40,10 @@ This repo is a WIP and usage is subject to change. Figure 1 below shows how the 
 <figcaption>Fig 1. Evaluation flow diagram</figcaption>
 </p>
 
+The tool can be run using the command-line instructions provided in the `Command line scripts` section.
 
+
+## Command line scripts
 ### Running on Saved Restart File
 To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows.
 
