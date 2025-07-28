@@ -34,10 +34,11 @@ The API is as follows:
 ## Using Spinup Evaluation
 This repo is a WIP and usage is subject to change. Figure 1 below shows how the evaluation procedure works in Spinup-Evaluation.
 
-<p align="center">
-<img src="chart.svg" alt="NEMO flow" width="500"/>
-<figcaption>Fig 1. Evaluation flow diagram</figcaption>
-</p>
+<div align="center">
+  <img src="chart.svg" alt="NEMO flow" width="500"/>
+  <div><strong>Fig 1.</strong> Evaluation flow diagram</div>
+</div>
+
 
 The tool can be run using the command-line instructions provided in the `Command line scripts` section.
 
