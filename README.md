@@ -2,6 +2,10 @@
 
 This repository contains code for benchmarking the machine learning spin-up of ocean models. It is designed to pair with [Spinup-Forecast](https://github.com/m2lines/Spinup-Forecast), which provides the machine learning models for accelerating the spin-up process for NEMO/DINO. The goal of this evaluation is to assess the performance of the spin-up process in terms of stability and convergence.
 
+Spinup-Evaluation was developed to assess the DINO configuration of ocean model NEMO with a set of dedicated physsics-based metrics, but new metrics can be added to metrics.py to make it compatible with any ocean model. See [Adding New Metrics](#adding-new-metrics) for details.
+
+
+## Code Structure
 The evaluation is performed using the `main.py` script, which calls a set of metrics defined in the `metrics.py` file. The results are saved in a .txt file.
 
 The API is as follows:
@@ -11,8 +15,7 @@ The API is as follows:
 - `src/utils.py`: Contains utility functions for data processing and visualization.
 
 ```plaintext
-.
-├
+
 ├── pyproject.toml         # Build system and tool configuration (e.g. black, ruff)
 ├── README.md              # Project overview and usage
 ├── LICENSE                # Project license
@@ -28,6 +31,7 @@ The API is as follows:
 - `--mesh-mask`: The name of the mesh mask file.
 - `--output` : The name of the output file where the metrics are stored. The default is `metric_results.txt`.
 
+
 ## Usage [TODO]
 This repo is a WIP and usage is subject to change. Figure 1 below shows how the evaluation procedure works in Spinup-Evaluation.
 
@@ -36,7 +40,6 @@ This repo is a WIP and usage is subject to change. Figure 1 below shows how the 
 <figcaption>Fig 1. Evaluation flow diagram</figcaption>
 </p>
 
-Spinup-Evaluation was developed to assess the DINO configuration of NEMO, but new metrics can be added to metrics.py to make it compatible with any ocean model. See [Adding New Metrics](#adding-new-metrics) for details.
 
 ### Running on Saved Restart File
 To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows.
