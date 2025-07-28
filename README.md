@@ -44,6 +44,32 @@ The tool can be run using the command-line instructions provided in the `Command
 
 
 ## Command line scripts
+
+### Installing Spinup Evaluation
+To install Spinup-Evaluation, clone the repository and create a virtual environment:
+```bash
+git clone https://github.com/m2lines/Spinup-Evaluation.git
+cd Spinup-Evaluation
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+```
+
+Then, install the required packages:
+
+```bash
+pip install -e .
+```
+For a development install, some further steps are recommended:
+
+```sh
+cd Spinup-Evaluation
+
+# Install optional dev dependencies
+pip install -e .[dev]
+
+# Configure pre-commit hooks
+pre-commit install
+```
 ### Running on Saved Restart File
 To evaluate a state obtained from a checkpoint, run Spinup-Evaluation as follows.
 
@@ -69,35 +95,37 @@ To evaluate a new spin-up state obtained using [Spinup-Forecast](https://github.
 
 <!-- > ![alt text](image.png) -->
 
-## Installation
-To install Spinup-Evaluation, clone the repository and create a virtual environment:
-```bash
-git clone https://github.com/m2lines/Spinup-Evaluation.git
-cd Spinup-Evaluation
-python -m venv venv
-source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
+## Adding New Metrics
+To add new metrics to the evaluation, modify the `metrics.py` file. An example metric function is given below:
+
+```python
+def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
+    """
+    Return the proportion of points not respecting the density decreasing constraint.
+
+    The density should decrease with depth, so the difference between the density at
+    a given depth and the density at the next depth should be negative.
+
+    Parameters
+    ----------
+    density : xarray.DataArray
+        DataArray (t, depth, lat, lon) with density value for each point of the
+        grid.
+    epsilon : float
+        Threshold for the density difference. Default is 1e-5.
+
+    Returns
+    -------
+    float
+        Proportion of points not respecting density decreasing constraint
+    """
+    density = density.where(density != 0)
+    diff = density - density.shift(depth=-1)
+    return (
+        (diff > epsilon).mean().data
+    )
 ```
-
-Then, install the required packages:
-
-```bash
-pip install -e .
-```
-For a development install, some further steps are recommended:
-
-```sh
-cd Spinup-Evaluation
-
-# Install optional dev dependencies
-pip install -e .[dev]
-
-# Configure pre-commit hooks
-pre-commit install
-```
-
-
-## Adding New Metrics [TODO]
-To add new metrics to the evaluation, modify the `metrics.py` file. Further guidance will be provided in the future.
 
 ## Testing [TODO]
 
