@@ -1,46 +1,65 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "spinup-evaluation"
 version = "0.1.0"
+description = "Climate model spinup evaluation metrics and diagnostics"
 requires-python = ">=3.9"
 authors = [
-  {name = "Matt Archer", email="ma595@cam.ac.uk" },
-  {name = "Surbhi Goel", email="sg2147@cam.ac.uk" },
+  {name = "Matt Archer", email = "ma595@cam.ac.uk"},
+  {name = "Surbhi Goel", email = "sg2147@cam.ac.uk"},
 ]
 readme = "README.md"
-# license = { file = "LICENSE" }
-keywords = ["python", "machine-learning", "benchmarking"]
+license = {file = "LICENSE"}
+keywords = ["machine-learning", "benchmarking", "oceanography", "climate-modeling", "nemo", "diagnostics"]
 classifiers = [
-	"Development Status :: 4 - Beta",
-	"Programming Language :: Python",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "License :: OSI Approved :: MIT License",
 ]
 
-dependencies = ["xarray[complete]==2024.7.0", "numpy==2.0.2"]
+dependencies = [
+    "xarray[io]>=2024.7.0",
+    "numpy>=2.0.0",
+]
 
 [project.optional-dependencies]
-dev = ["ruff"]
+dev = [
+    "ruff>=0.1.0",
+    "pytest>=7.0.0",
+    "pytest-cov",
+    "mypy",
+    "pre-commit",
+]
 
 [project.urls]
 Repository = "https://github.com/m2lines/Spinup-Evaluation"
-Issues = "https://github.com/m2lines/Spinup-Evaluation"
+Issues = "https://github.com/m2lines/Spinup-Evaluation/issues"
+Documentation = "https://spinup-evaluation.readthedocs.io"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+[project.scripts]
+spinup-eval = "spinup_evaluation.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["spinup_evaluation*"]
 
 [tool.ruff]
+src = ["src", "tests"]
 line-length = 88
+target-version = "py39"
 
 [tool.ruff.lint]
-# See https://docs.astral.sh/ruff/rules for full details of each ruleset.
-
-# Enable:  D: `pydocstyle`, PL: `pylint`, I: `isort`, W: `pycodestyle whitespace`
-#          NPY: `numpy`, FLY: `flynt`, F: `pyflakes`, RUF: `ruff`
-#          From flake8: "ARG", "SLF", "S", "BLE", "B", "A", "C4", "EM", "ICN",
-#                       "PIE", "Q", "RSE", "SIM", "TID"
 select = ["D", "PL", "I", "E", "W", "NPY", "FLY", "F", "RUF",
           "ARG", "SLF", "S", "BLE","B", "A", "C4", "EM", "ICN", "PIE", "Q", "RSE",
           "SIM", "TID"]
-
-# Enable D417 (Missing argument description) on top of the NumPy convention.
 extend-select = ["D417"]
 
 # Ignore SIM108 (use ternary instead of if-else) as I think it can obscure intent.
@@ -49,5 +68,13 @@ extend-select = ["D417"]
 ignore = ["SIM108", "RUF002", "PLR0913"]
 
 [tool.ruff.lint.pydocstyle]
-# Use NumPy convention for checking docstrings
 convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "S101"]
+"__init__.py" = ["D104"]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "./tests"
+]

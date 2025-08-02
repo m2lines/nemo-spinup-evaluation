@@ -6,18 +6,32 @@ import sys
 
 import yaml
 
-from src.loader import load_dino_data
-from src.metrics import (
-    ACC_Drake_metric,
-    ACC_Drake_metric_2,
-    NASTG_BSF_max,
-    check_density,
-    temperature_500m_30NS_metric,
-    temperature_BWbox_metric,
-    temperature_DWbox_metric,
-)
-from src.metrics_io import write_metric_results
-from src.utils import get_density, get_depth
+from spinup_evaluation.loader import load_dino_data
+from spinup_evaluation.metrics_io import write_metric_results
+from spinup_evaluation.utils import get_density, get_depth
+
+try:
+    # Try relative import first (when running as part of package)
+    from .metrics import (
+        ACC_Drake_metric,
+        ACC_Drake_metric_2,
+        NASTG_BSF_max,
+        check_density,
+        temperature_500m_30NS_metric,
+        temperature_BWbox_metric,
+        temperature_DWbox_metric,
+    )
+except ImportError:
+    # Fallback to absolute import (for development/testing)
+    from spinup_evaluation.metrics import (
+        ACC_Drake_metric,
+        ACC_Drake_metric_2,
+        NASTG_BSF_max,
+        check_density,
+        temperature_500m_30NS_metric,
+        temperature_BWbox_metric,
+        temperature_DWbox_metric,
+    )
 
 
 def apply_metrics_restart(data, mask):
@@ -135,7 +149,12 @@ def apply_metrics_output(grid_output, restart, mask):
     return results
 
 
-if __name__ == "__main__":
+def main():
+    """
+    Command-line interface for computing climate model diagnostics.
+
+    Parses arguments, loads configuration and data, applies metrics, and writes results.
+    """
     parser = argparse.ArgumentParser(
         description="Compute climate model diagnostics from restart or output files."
     )
@@ -171,15 +190,12 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    # Collect files paths based on arguments provided
-
-    data_files = []
     # Logic to collect data files based on the provided paths
-    # read in contents of yaml file DINO-sim.yaml which maps
+    # read in contents of yaml file DINO-setup.yaml which maps
     # variables to grid files.
 
     if args.sim_path:
-        # Load DINO-sim.yaml to get expected DINO files
+        # Load DINO-setup.yaml to get expected DINO files
         # point to the config file in the configs directory
         config_file = os.path.join("configs", "DINO-setup.yaml")
         if not os.path.exists(config_file):
@@ -194,7 +210,6 @@ if __name__ == "__main__":
         results = apply_metrics_restart(data["restart"], data["mesh_mask"])
         write_metric_results(results, "results/metrics_results_restart.csv")
     if args.mode in ["output", "both"]:
-        # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
         grid_output = data["grid"]
 
         restart = None
@@ -219,4 +234,6 @@ if __name__ == "__main__":
 #
 # The code now uses a configuration YAML (e.g., configs/DINO-setup.yaml)
 # to determine which files to load and which variables to map.
-#
+
+if __name__ == "__main__":
+    main()

@@ -6,7 +6,7 @@ from typing import Dict, Mapping, Optional, Union
 
 import xarray as xr
 
-from src.standardise_inputs import VARIABLE_ALIASES, standardise
+from spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standardise
 
 VarSpec = Mapping[str, Union[str, Mapping[str, str]]]
 
