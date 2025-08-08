@@ -9,7 +9,6 @@ from collections import defaultdict
 import yaml
 import pandas as pd
 
-import xarray as xr
 
 from src.metrics import (
     ACC_Drake_metric,
@@ -21,93 +20,9 @@ from src.metrics import (
 )
 from src.utils import get_density, get_depth, sanitize_metrics_dict
 from src.metrics_io import write_metrics_to_csv
-from src.variable_aliases import VARIABLE_ALIASES, standardize_variables
+from src.variable_aliases import VARIABLE_ALIASES
 
-
-def load_output_files(setup: dict, path: str) -> dict[str, xr.Dataset]:
-    """Load output files based on the setup configuration."""
-    output_data = {}
-    for field, filename in setup.items():
-        # TODO: check if the file exists
-        if not os.path.exists(os.path.join(path, filename)):
-            raise FileNotFoundError(f"File {filename} not found in path {path}.")
-        if field == "T_sampled":
-            # Special case for T_sampled, which is sampled from T grid
-            data_grid_T = xr.open_dataset(os.path.join(path, setup["T"]))
-            data_grid_T_sampled = xr.open_dataset(os.path.join(path, filename))
-            data_grid_T_sampled["time_counter"] = data_grid_T["time_counter"]
-            output_data[field] = data_grid_T_sampled
-        else:
-            output_data[field] = xr.open_dataset(os.path.join(path, filename))
-        # make a correction here: if field is 'T_sampled'
-
-    return output_data
-
-
-# these could be general functions for loading any mesh_mask
-# could extract the requried vars from the setup.yaml or VARIABLE_ALIASES file.
-def load_mesh_mask(path: str) -> xr.Dataset:
-    """Load the NEMO mesh mask file."""
-    ds = xr.open_dataset(path)
-    # required_vars = ["tmask", "e1t", "e2t", "e3t"]  # TODO: update with what you need
-    # missing = [var for var in required_vars if var not in ds.variables]
-    # if missing:
-    #     raise ValueError(f"Mesh mask file {path} is missing required variables: {missing}")
-    return ds
-
-
-def load_dino_outputs(
-    mode, path, setup: dict, VARIABLE_ALIASES: dict
-) -> dict[str, xr.Dataset]:
-    """Load DINO model inputs based on YAML configuration.
-
-    Parameters
-    ----------
-    config (dict)
-        Parsed YAML config containing mesh_mask, restart_files,
-    output_files, etc.
-
-    Returns
-    -------
-    dict[str, xr.Dataset]
-        Dictionary mapping source (e.g., 'mesh_mask', 'restart',
-    'output') to xarray datasets or variables.
-    """
-    data = {}
-
-    # Always required
-    # TODO: check if the mesh_mask file exists
-    if "mesh_mask" not in setup:
-        raise ValueError("Mesh mask file is required in the setup configuration.")
-    mesh_mask_path = setup["mesh_mask"]
-    data["mesh_mask"] = load_mesh_mask(os.path.join(path, mesh_mask_path))
-
-    # Optional: restart file
-    if mode in ["restart", "both"]:
-        # get the restart path using glob in path - it ends with restart.nc
-        # open a file that ends with restart.nc
-        restart_path = glob.glob(os.path.join(path, "*restart.nc"))[0]
-        data["restart"] = xr.open_dataset(restart_path)
-
-    # Optional: grid T, U, V, and sampled T
-    if mode in ["output", "both"] and "output_variables" in setup:
-        # check if output_variables is
-        setup_output = setup["output_variables"]
-        data["output"] = load_output_files(setup_output, path)
-
-        # check if restart is provided
-
-    # now standardise the data
-    for key, dataset in data.items():
-        if isinstance(dataset, xr.Dataset):
-            data[key] = standardize_variables(dataset, VARIABLE_ALIASES)
-        elif isinstance(dataset, dict):  # e.g., output files
-            data[key] = {
-                k: standardize_variables(v, VARIABLE_ALIASES)
-                for k, v in dataset.items()
-            }
-
-    return data
+from src.loader import load_dino_outputs
 
 
 def apply_metrics_restart(data, mask):
