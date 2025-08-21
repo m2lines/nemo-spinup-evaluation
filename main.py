@@ -17,7 +17,7 @@ from src.metrics import (
     temperature_DWbox_metric,
 )
 from src.utils import get_density, get_depth
-from variable_aliases import VARIABLE_ALIASES, standardize_variables
+from src.variable_aliases import VARIABLE_ALIASES, standardize_variables
 
 
 def read_data(datafilepath, maskfilepath, variable_dict):
