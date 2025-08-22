@@ -1,4 +1,4 @@
-"""Core metrics functions to evaluate the simulations and projections."""
+"""Core metrics to evaluate physical consistency of simulations and projections."""
 
 # Adapted from https://github.com/Etienne-Meunier/Metrics-Ocean
 # Original author: Etienne Meunier

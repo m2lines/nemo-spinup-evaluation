@@ -1,4 +1,4 @@
-"""Helper functions for running the metrics functions."""
+"""Utility functions to support metric evaluation."""
 
 import numpy as np
 
