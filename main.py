@@ -163,6 +163,8 @@ def write_metric_results(results, output_filepath):
     output_filepath : str
         The path to the output file.s
     """
+    os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
+
     with open(output_filepath, "w") as f:
         for name, result in results.items():
             try:
@@ -182,7 +184,7 @@ def write_metric_results(results, output_filepath):
             f.write(line + "\n")
             print(line)
 
-    print(f"\n✅ Successfully wrote metrics to '{output_filepath}'")
+    print(f"\n Successfully wrote metrics to '{output_filepath}'")
 
 
 if __name__ == "__main__":
@@ -255,10 +257,8 @@ if __name__ == "__main__":
 
     if args.restart and not args.grid_T:
         restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
-        print(restart)
         results = apply_metrics_restart(restart, mesh_mask)
-        write_metric_results(results, "metrics_results_restart.txt")
-        print(results)
+        write_metric_results(results, "results/metrics_results_restart.txt")
     else:
         restart, mesh_mask = read_data(args.restart, args.mesh_mask, VARIABLE_ALIASES)
         data_grid_T, mesh_mask = read_data(
@@ -282,12 +282,21 @@ if __name__ == "__main__":
             restart,
             mesh_mask,
         )
-        write_metric_results(results, "metrics_results_grid.txt")
-        print(results)
+        write_metric_results(results, "results/metrics_results_grid.txt")
 
 
 ##################################
 ### Command to run grid files ####
 ##################################
-# python3 main.py --restart ../nc_files/nc_files/DINO_00576000_restart.nc  --grid_T ../nc_files/nc_files/DINO_1y_grid_T.nc --grid_T_sampled .
-# ./nc_files/nc_files/DINO_1m_To_1y_grid_T.nc  --grid_U ../nc_files/nc_files/DINO_1y_grid_U.nc --grid_V ../nc_files/nc_files/DINO_1y_grid_V.nc  --mesh-mask ../nc_files/nc_files/mesh_mask.nc
+# python3 main.py --restart ../nc_files/nc_files/DINO_00576000_restart.nc
+#                 --grid_T ../nc_files/nc_files/DINO_1y_grid_T.nc
+#                 --grid_T_sampled ../nc_files/nc_files/DINO_1m_To_1y_grid_T.nc
+#                 --grid_U ../nc_files/nc_files/DINO_1y_grid_U.nc
+#                 --grid_V ../nc_files/nc_files/DINO_1y_grid_V.nc
+#                 --mesh-mask ../nc_files/nc_files/mesh_mask.nc
+
+##################################
+### Command to run restart files ####
+##################################
+# python3 main.py --restart ../nc_files/nc_files/DINO_00576000_restart.nc
+#                 --mesh-mask ../nc_files/nc_files/mesh_mask.nc
