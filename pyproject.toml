@@ -1,13 +1,13 @@
 [project]
 name = "spinup-evaluation"
-version = "0.1"
+version = "0.1.0"
 requires-python = ">=3.9"
 authors = [
   {name = "Matt Archer", email="ma595@cam.ac.uk" },
   {name = "Surbhi Goel", email="sg2147@cam.ac.uk" },
 ]
 readme = "README.md"
-license = { file = "LICENSE" }
+# license = { file = "LICENSE" }
 keywords = ["python", "machine-learning", "benchmarking"]
 classifiers = [
 	"Development Status :: 4 - Beta",
@@ -24,7 +24,6 @@ Repository = "https://github.com/m2lines/Spinup-Evaluation"
 Issues = "https://github.com/m2lines/Spinup-Evaluation"
 
 [tool.setuptools]
-py-modules = ["metrics"]
 package-dir = {"" = "src"}
 
 [tool.ruff]
@@ -46,6 +45,7 @@ extend-select = ["D417"]
 
 # Ignore SIM108 (use ternary instead of if-else) as I think it can obscure intent.
 # Ignore RUF002 (ambiguous characters) as it does not allow apostrophes in strings.
+# Ignore PLR0913 (too many arguments) will be addressed eventually.
 ignore = ["SIM108", "RUF002", "PLR0913"]
 
 [tool.ruff.lint.pydocstyle]
