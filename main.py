@@ -296,6 +296,7 @@ if __name__ == "__main__":
         )
 
     results_ref = {}
+    # Restart metrics - instantaneous
     if args.mode in ["restart", "both"]:
         print("Applying metrics to restart files...")
         results = sanitize_metrics_dict(
@@ -316,6 +317,7 @@ if __name__ == "__main__":
             time_array=data["restart"].get("time_counter", None),
         )
 
+    # Output metrics - time series outputs
     if args.mode in ["output", "both"]:
         print("Applying metrics to output files...")
         # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
