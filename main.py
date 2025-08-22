@@ -99,14 +99,6 @@ def apply_metrics_output(
     results = {}
     metric_functions = {
         "check_density_from_file": lambda: check_density(data_grid_T["density"]),
-        "check_density_computed": lambda: check_density(
-            get_density(
-                data_grid_T["temperature"],
-                data_grid_T["salinity"],
-                get_depth(restart, mask),
-                mask["tmask"],
-            )[0]
-        ),
         "temperature_500m_30NS_metric": lambda: temperature_500m_30NS_metric(
             data_grid_T["temperature"], mask
         ),
@@ -123,6 +115,16 @@ def apply_metrics_output(
             data_grid_V["velocity_meridional"], data_grid_T_sampled["ssh"], mask
         ),
     }
+
+    if restart is not None:
+        metric_functions["check_density_computed"] = lambda: check_density(
+            get_density(
+                data_grid_T["temperature"],
+                data_grid_T["salinity"],
+                get_depth(restart, mask),
+                mask["tmask"],
+            )[0]
+        )
 
     for name, func in metric_functions.items():
         try:
@@ -199,13 +201,18 @@ if __name__ == "__main__":
         # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
         grid_output = data["output"]
 
+        restart = None
+        # data["restart"] might not exist therefore check if it is None
+        if "restart" in data and data["restart"] is not None:
+            restart = data["restart"]
+
         # use magic operator to pass to function.
         results = apply_metrics_output(
             grid_output["T"],
             grid_output["T_sampled"],
             grid_output["u"],
             grid_output["v"],
-            data["restart"],
+            restart,
             data["mesh_mask"],
         )
         write_metric_results(results, "results/metrics_results_grid.csv")

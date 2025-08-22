@@ -88,8 +88,15 @@ def load_dino_outputs(mode, path, setup: dict) -> dict[str, xr.Dataset]:
     if mode in ["restart", "both"]:
         # get the restart path using glob in path - it ends with restart.nc
         # open a file that ends with restart.nc
-        restart_path = glob.glob(os.path.join(path, "*restart.nc"))[0]
-        data["restart"] = xr.open_dataset(restart_path)
+        # TODO: This assumes that multiple restart files exist. We only take
+        # the first one.
+
+        restart_files = glob.glob(os.path.join(path, "*restart.nc"))
+        if restart_files:
+            data["restart"] = xr.open_dataset(restart_files[0])
+        else:
+            msg = "Restart file not found."
+            raise FileNotFoundError(msg)
 
     # Optional: grid T, U, V, and sampled T
     if mode in ["output", "both"] and "output_variables" in setup:
@@ -97,7 +104,16 @@ def load_dino_outputs(mode, path, setup: dict) -> dict[str, xr.Dataset]:
         setup_output = setup["output_variables"]
         data["output"] = load_output_files(setup_output, path)
 
+        # find restart file in directory and add to data map if it exists
+        # TODO: Check that get_density_computed is even valid.
+        restart_files = glob.glob(os.path.join(path, "*restart.nc"))
+        if restart_files:
+            data["restart"] = xr.open_dataset(restart_files[0])
+
     # now standardise the data
+    # NOTE: We do not standardise the mesh mask - there's no mapping of
+    # variables for the mesh mask in standardise.py that match
+    # ( ["tmask", "e1t", "e2t", "e3t_0"]).
     for key, dataset in data.items():
         if isinstance(dataset, xr.Dataset):
             data[key] = standardise(dataset, VARIABLE_ALIASES)
