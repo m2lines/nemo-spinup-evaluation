@@ -1,4 +1,4 @@
-"""Run metrics on data file."""
+"""Evaluate grid files using physical metrics."""
 
 import argparse
 import os
@@ -14,8 +14,7 @@ from src.metrics import (
     temperature_BWbox_metric,
     temperature_DWbox_metric,
 )
-from src.utils import get_depth, get_density
-
+from src.utils import get_density, get_depth
 from variable_aliases import VARIABLE_ALIASES, standardize_variables
 
 
@@ -61,8 +60,6 @@ def apply_metrics_restart(data, mask):
     results = {}
     metric_functions = {
         "check_density_from_file": lambda d: check_density(d["density"][0]),
-        ### Attention: Change restart with restart_updated ###
-        ### Attention: I changed line 22 of utils.py, sshn-> ssh as the code works on renamed variables only. Needs to be discussed.
         "check_density_computed": lambda d: check_density(
             get_density(
                 d["temperature"], d["salinity"], get_depth(restart, mask), mask["tmask"]
@@ -86,7 +83,7 @@ def apply_metrics_restart(data, mask):
     for name, func in metric_functions.items():
         try:
             results[name] = func(data)
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, ImportError) as e:
             results[name] = f"Error: {e}"
             print(f"Error in metric {name}: {e}")
 
@@ -97,19 +94,29 @@ def apply_metrics_grid(
     data_grid_T, data_grid_T_sampled, data_grid_U, data_grid_V, restart, mask
 ):
     """
-    Apply metrics to the dataset and mask.
+    Apply metrics to ocean model grid datasets.
 
     Parameters
     ----------
-    data : xarray.Dataset
-        The standardized dataset containing ocean model variables.
+    data_grid_T : xarray.Dataset
+        The standardized T-grid dataset containing temperature, salinity,
+        and density variables.
+    data_grid_T_sampled : xarray.Dataset
+        The sampled T-grid dataset containing SSH (sea surface height) data.
+    data_grid_U : xarray.Dataset
+        The standardized U-grid dataset containing zonal velocity data.
+    data_grid_V : xarray.Dataset
+        The standardized V-grid dataset containing meridional velocity data.
+    restart : xarray.Dataset
+        The restart dataset containing model state information.
     mask : xarray.Dataset
-        The standardized mask dataset.
+        The standardized mask dataset containing grid masks.
 
     Returns
     -------
     dict
-        A dictionary containing the results of the metrics.
+        A dictionary containing the results of the applied metrics, with
+        metric names as keys and computed values or error messages as values.
     """
     results = {}
     metric_functions = {
@@ -145,7 +152,7 @@ def apply_metrics_grid(
             results[name] = result
             # if hasattr(result, "plot"):
             #     result.plot()
-        except Exception as e:
+        except (ValueError, TypeError, KeyError, AttributeError, ImportError) as e:
             results[name] = f"Error: {e}"
             print(f"Error in metric {name}: {e}")
 
@@ -178,7 +185,7 @@ def write_metric_results(results, output_filepath):
                     line = f"{name}: {value}"
                 else:
                     line = f"{name}: {value}"
-            except Exception:
+            except (TypeError, ValueError, AttributeError):
                 line = f"{name}: {result}"
 
             f.write(line + "\n")
@@ -236,9 +243,7 @@ if __name__ == "__main__":
     if not args.restart and not (
         args.grid_T and args.grid_T_sampled and args.grid_U and args.grid_V
     ):
-        print(
-            "Error: You must specify either --restart or all three grid files: --grid_T, --grid_U, and --grid_V."
-        )
+        print("Error: You must give path to either restart file or grid files.")
         parser.print_help()
         sys.exit(1)
 
