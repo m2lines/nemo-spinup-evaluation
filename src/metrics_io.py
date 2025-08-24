@@ -52,6 +52,7 @@ def write_metric_results(results, output_filepath):
         "temperature_BWbox_metric",
         "temperature_DWbox_metric",
         "ACC_Drake_metric",
+        "ACC_Drake_metric_2",
         "NASTG_BSF_max",
     ]
 

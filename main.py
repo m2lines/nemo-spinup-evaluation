@@ -6,9 +6,10 @@ import sys
 
 import yaml
 
-from src.loader import load_dino_outputs
+from src.loader import load_dino_data
 from src.metrics import (
     ACC_Drake_metric,
+    ACC_Drake_metric_2,
     NASTG_BSF_max,
     check_density,
     temperature_500m_30NS_metric,
@@ -50,12 +51,13 @@ def apply_metrics_restart(data, mask):
             d["temperature"][0], mask
         ),
         "temperature_DWbox_metric": lambda d: temperature_DWbox_metric(
-            d["velocity_zonal"][0], mask
+            d["velocity_u"][0], mask
         ),
-        "ACC_Drake_metric": lambda d: ACC_Drake_metric(d["velocity_zonal"][0], mask),
-        "NASTG_BSF_max": lambda d: NASTG_BSF_max(
-            d["velocity_meridional"][0], d["ssh"], mask
+        "ACC_Drake_metric": lambda d: ACC_Drake_metric(d["velocity_u"][0], mask),
+        "ACC_Drake_metric_2": lambda d: ACC_Drake_metric_2(
+            d["velocity_u"][0], d["ssh"][0], mask
         ),
+        "NASTG_BSF_max": lambda d: NASTG_BSF_max(d["velocity_v"][0], d["ssh"], mask),
     }
 
     for name, func in metric_functions.items():
@@ -68,23 +70,14 @@ def apply_metrics_restart(data, mask):
     return results
 
 
-def apply_metrics_output(
-    data_grid_T, data_grid_T_sampled, data_grid_U, data_grid_V, restart, mask
-):
+def apply_metrics_output(grid_output, restart, mask):
     """
     Apply metrics to ocean model grid datasets.
 
     Parameters
     ----------
-    data_grid_T : xarray.Dataset
-        The standardized T-grid dataset containing temperature, salinity,
-        and density variables.
-    data_grid_T_sampled : xarray.Dataset
-        The sampled T-grid dataset containing SSH (sea surface height) data.
-    data_grid_U : xarray.Dataset
-        The standardized U-grid dataset containing zonal velocity data.
-    data_grid_V : xarray.Dataset
-        The standardized V-grid dataset containing meridional velocity data.
+    grid_output : xarray.Dataset
+        The standardized grid output dataset containing model variables.
     restart : xarray.Dataset
         The restart dataset containing model state information.
     mask : xarray.Dataset
@@ -98,29 +91,32 @@ def apply_metrics_output(
     """
     results = {}
     metric_functions = {
-        "check_density_from_file": lambda: check_density(data_grid_T["density"]),
+        "check_density_from_file": lambda: check_density(
+            grid_output["density"]
+        ),  # Updated
         "temperature_500m_30NS_metric": lambda: temperature_500m_30NS_metric(
-            data_grid_T["temperature"], mask
+            grid_output["temperature"], mask
         ),
         "temperature_BWbox_metric": lambda: temperature_BWbox_metric(
-            data_grid_T["temperature"], mask
+            grid_output["temperature"], mask
         ),
         "temperature_DWbox_metric": lambda: temperature_DWbox_metric(
-            data_grid_U["velocity_zonal"], mask
+            grid_output["velocity_u"], mask
         ),
-        "ACC_Drake_metric": lambda: ACC_Drake_metric(
-            data_grid_U["velocity_zonal"], mask
+        "ACC_Drake_metric": lambda: ACC_Drake_metric(grid_output["velocity_u"], mask),
+        "ACC_Drake_metric_2": lambda: ACC_Drake_metric_2(
+            grid_output["velocity_u"], grid_output["ssh"], mask
         ),
         "NASTG_BSF_max": lambda: NASTG_BSF_max(
-            data_grid_V["velocity_meridional"], data_grid_T_sampled["ssh"], mask
+            grid_output["velocity_v"], grid_output["ssh"], mask
         ),
     }
 
     if restart is not None:
         metric_functions["check_density_computed"] = lambda: check_density(
             get_density(
-                data_grid_T["temperature"],
-                data_grid_T["salinity"],
+                grid_output["temperature"],
+                grid_output["salinity"],
                 get_depth(restart, mask),
                 mask["tmask"],
             )[0]
@@ -193,13 +189,13 @@ if __name__ == "__main__":
             dino_setup = yaml.safe_load(file)
         # Collect files based on the yaml mapping
 
-    data = load_dino_outputs(args.mode, args.sim_path, dino_setup)
+    data = load_dino_data(args.mode, args.sim_path, dino_setup, do_standardise=True)
     if args.mode in ["restart", "both"]:
         results = apply_metrics_restart(data["restart"], data["mesh_mask"])
         write_metric_results(results, "results/metrics_results_restart.csv")
     if args.mode in ["output", "both"]:
         # For output mode, we expect grid_T, grid_T_sampled, grid_U, grid_V
-        grid_output = data["output"]
+        grid_output = data["grid"]
 
         restart = None
         # data["restart"] might not exist therefore check if it is None
@@ -208,10 +204,7 @@ if __name__ == "__main__":
 
         # use magic operator to pass to function.
         results = apply_metrics_output(
-            grid_output["T"],
-            grid_output["T_sampled"],
-            grid_output["u"],
-            grid_output["v"],
+            grid_output,
             restart,
             data["mesh_mask"],
         )

@@ -1,22 +1,26 @@
 """Lookup table for mapping standard variables with different variants."""
 
+import xarray as xr
+
 VARIABLE_ALIASES = {
     "temperature": [
         "toce",
         "tn",
         "temperature",
     ],  # Example: can be called 'toce' or 'tn' in various datasets
-    "velocity_zonal": [
+    "velocity_u": [
         "un",
         "u",
         "uoce",
         "zonal_velocity",
+        "velocity_u",
     ],  # Zonal velocity can be 'un', 'u', or 'zonal_velocity'
-    "velocity_meridional": [
+    "velocity_v": [
         "vn",
         "v",
         "voce",
         "meridional_velocity",
+        "velocity_v",
     ],  # Meridional velocity
     "depth": [
         "depth",
@@ -40,45 +44,42 @@ VARIABLE_ALIASES = {
 
 def standardise(dataset, variable_dict):
     """
-    Standardizes variable, coordinate, and dimension names across datasets.
+    Rename variables/coords/dims using aliases.
 
-    Parameters
-    ----------
-    dataset : xarray.Dataset
-        The dataset containing variables, coordinates, and dimensions.
-    variable_dict : dict
-        A dictionary mapping standardized names to possible alternatives.
-
-    Returns
-    -------
-    xarray.Dataset
-        The dataset with standardized names.
+    Returns the same type as input (DataArray or Dataset).
     """
+    is_da = isinstance(dataset, xr.DataArray)
+    if is_da:
+        orig_name = dataset.name or "var"
+        ds = dataset.to_dataset(name=orig_name)
+    else:
+        if not isinstance(dataset, xr.Dataset):
+            msg = "standardise expects an xarray.Dataset or xarray.DataArray"
+            raise TypeError(msg)
+        ds = dataset
+
     rename_map = {}
-
-    # Iterate over the variable aliases dictionary
-    for standard_name, aliases in variable_dict.items():
+    for std, aliases in variable_dict.items():
         for alias in aliases:
-            # Check for variables to rename
-            if alias in dataset.variables:
-                rename_map[alias] = standard_name
+            if alias in ds.variables:
+                rename_map[alias] = std
                 break
-            # Check for coordinates to rename
-            if alias in dataset.coords:
-                rename_map[alias] = standard_name
+            if alias in ds.coords:
+                rename_map[alias] = std
                 break
-            # Check for dimensions to rename (if the alias exists in dims)
-            if alias in dataset.dims:
-                rename_map[alias] = standard_name
+            if alias in ds.dims:
+                rename_map[alias] = std
                 break
 
-    # Rename variables, coordinates, and dimensions
-    dataset = dataset.rename(rename_map)
+    ds = ds.rename(rename_map)
 
-    # Explicitly handle renaming of 'x' and 'y' dimensions to 'nav_lon' and 'nav_lat'
-    if "x" in dataset.dims:
-        dataset = dataset.rename({"x": "nav_lon"})
-    if "y" in dataset.dims:
-        dataset = dataset.rename({"y": "nav_lat"})
+    if "x" in ds.dims:
+        ds = ds.rename({"x": "nav_lon"})
+    if "y" in ds.dims:
+        ds = ds.rename({"y": "nav_lat"})
 
-    return dataset
+    if is_da:
+        new_name = rename_map.get(orig_name, orig_name)
+        return ds[new_name]
+
+    return ds

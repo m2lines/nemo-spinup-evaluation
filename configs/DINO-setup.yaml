@@ -1,18 +1,13 @@
 # DINO-setup.yaml
-# should hold true for all DINO runs.
 
 mesh_mask: mesh_mask.nc
 
-restart_files: 'restart'  # optional # density and all variables
+restart_files: 'restart'
 
-output_file_defaults: DINO_combined.nc  # if used in future
-
-# overrides defaults
 output_variables:
-  T: DINO_1y_grid_T.nc
-  T_sampled: DINO_1m_To_1y_grid_T.nc
-  u: DINO_1y_grid_U.nc
-  v: DINO_1y_grid_V.nc
-  w: DINO_1y_grid_W.nc
-
-# variable mapping here?
+  temperature: grid_T_3D.nc
+  salinity: grid_T_3D.nc
+  density: grid_T_3D.nc
+  ssh: grid_T_2D.nc
+  velocity_u: grid_U_3D.nc
+  velocity_v: grid_V_3D.nc
