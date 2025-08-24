@@ -81,7 +81,7 @@ def temperature_500m_30NS_metric(
     ) / area_500m_30NS.sum(dim=["nav_lat", "nav_lon"])
 
 
-def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset):
+def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Dataset):
     """
     Metric Extraction in a "Bottom Water" box.
 
@@ -102,7 +102,7 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Parameters
     ----------
-    thetao    : xarray.DataArray
+    temperature    : xarray.DataArray
         Temperature data (t, depth, lat, lon) with temperature value for each point of
         the grid.
     file_mask : xarray.Dataset
@@ -113,14 +113,18 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
     float
         np.float32 or np.float64 depending on recording precision of simulation files.
     """
-    t_BW = thetao.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+    t_BW = temperature.where(
+        1 - (temperature.depth < 3000) * (abs(temperature.nav_lat) < 30)
+    )  # noqa: PLR2004
 
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
     area_BW = (
-        e1t * e2t * tmask.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+        e1t
+        * e2t
+        * tmask.where(1 - (temperature.depth < 3000) * (abs(temperature.nav_lat) < 30))  # noqa: PLR2004
     )
 
     # Returning Average Temperature on Box
@@ -129,7 +133,7 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
     )
 
 
-def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset):
+def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Dataset):
     """
     Metric Extraction in a "Deep Water" box.
 
@@ -150,7 +154,7 @@ def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Parameters
     ----------
-    thetao    : xarray.DataArray
+    temperature    : xarray.DataArray
         Temperature data (t, depth, lat, lon) with temperature value for each point of
         the grid.
     file_mask : xarray.Dataset
@@ -164,13 +168,17 @@ def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
-    t_DW = thetao.where((abs(thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+    t_DW = temperature.where(
+        (abs(temperature.depth - 1750) < 1250) * (abs(temperature.nav_lat) < 30)
+    )  # noqa: PLR2004
 
     # Computing Area Weights from Mask over Box
     area_DW = (
         e1t
         * e2t
-        * tmask.where(abs((thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+        * tmask.where(
+            abs((temperature.depth - 1750) < 1250) * (abs(temperature.nav_lat) < 30)
+        )  # noqa: PLR2004
     )
 
     # Returning Average Temperature on Box
