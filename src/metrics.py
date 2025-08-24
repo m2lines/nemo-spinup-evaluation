@@ -251,27 +251,24 @@ def ACC_Drake_metric_2(
     float
         np.float32 or np.float64 depending on recording precision of simulation files.
     """
-    e3u_0 = file_mask.e3u_0
-    e2u = file_mask.e2u
-    umask_Drake = file_mask.umask.isel(nav_lon=0)
+    umask_Drake = file_mask.umask.isel(nav_lon=0).squeeze()
+    e3u_0 = file_mask.e3u_0.squeeze()
+    e2u = file_mask.e2u.squeeze()
 
     # Recomputing e3u, using ssh to refactor the original e3u_0 cell heights)
-    ssh_u = (ssh + ssh.roll(_nav_lon=-1)) / 2
+    ssh_u = (ssh + ssh.roll(nav_lon=-1)) / 2
     bathy_u = e3u_0.sum(dim="depth")
     ssumask = umask_Drake[:, 0]
     e3u = e3u_0 * (1 + ssh_u * ssumask / (bathy_u + 1 - ssumask))
-
     # Masking the variables onto the Drake Passage
     u_masked = uo.isel(nav_lon=0) * umask_Drake
     e3u_masked = e3u.isel(nav_lon=0) * umask_Drake
     e2u_masked = e2u.isel(nav_lon=0) * umask_Drake
-
     # Multiplying zonal velocity by the sectional areas (e2u*e3u)
-    ubar = (u_masked * e3u_masked).sum(dim="depth")
-    flux = (e2u_masked * ubar).sum()
-
+    ubar = u_masked * e3u_masked
+    flux = (e2u_masked * ubar).sum(dim=["nav_lat", "depth"])
     # Return Total Transport across Drake passage as a numpy scalar (unit : Sv)
-    return flux.data / 1e6
+    return flux / 1e6
 
 
 def NASTG_BSF_max(
@@ -322,5 +319,5 @@ def NASTG_BSF_max(
     BSF_NASPG = BSF.where(abs(BSF.nav_lat - 20) < 20)  # noqa: PLR2004
 
     # Selecting the maximum value of the BSF in the selected window
-    # and return it as a numpy scalar68G
+    # and return it as a numpy scalar
     return BSF_NASPG.max(dim=["nav_lat", "nav_lon"])
