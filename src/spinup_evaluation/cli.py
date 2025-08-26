@@ -177,11 +177,17 @@ def main():
         default="both",
     )
     parser.add_argument(
-        "--results",
+        "--results-dir",
         type=str,
-        help="Path to save output metric values (default: metrics_results.csv)",
+        help="Path to save output metric values",
+        default="results/",
     )
-
+    parser.add_argument(
+        "--result-file-prefix",
+        type=str,
+        help="Prefix to save the final result file",
+        default="metrics_results",
+    )
     args = parser.parse_args()
 
     # Ensure at least one of the inputs is provided
@@ -203,12 +209,18 @@ def main():
             sys.exit(1)
         with open(config_file, "r") as file:
             dino_setup = yaml.safe_load(file)
-        # Collect files based on the yaml mapping
+
+    # Ensure the results directory exists
+    results_dir = os.path.dirname(args.results_dir)
+    if results_dir and not os.path.exists(results_dir):
+        os.makedirs(results_dir, exist_ok=True)
+    prefix = args.result_file_prefix
 
     data = load_dino_data(args.mode, args.sim_path, dino_setup, do_standardise=True)
+
     if args.mode in ["restart", "both"]:
         results = apply_metrics_restart(data["restart"], data["mesh_mask"])
-        write_metric_results(results, "results/metrics_results_restart.csv")
+        write_metric_results(results, f"{results_dir}/{prefix}_restart.csv")
     if args.mode in ["output", "both"]:
         grid_output = data["grid"]
 
@@ -223,7 +235,7 @@ def main():
             restart,
             data["mesh_mask"],
         )
-        write_metric_results(results, "results/metrics_results_grid.csv")
+        write_metric_results(results, f"{results_dir}/{prefix}_grid.csv")
 
 
 ##################################
