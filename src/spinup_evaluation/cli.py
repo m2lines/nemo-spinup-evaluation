@@ -49,7 +49,7 @@ except (TypeError, ValueError, KeyError, AttributeError):
 # -----------------------------
 # CLI helpers
 # -----------------------------
-def parse_args() -> argparse.Namespace:
+def parse_args(argv) -> argparse.Namespace:
     """Parse command-line arguments for the CLI."""
     parser = argparse.ArgumentParser(
         description="Compute climate model diagnostics from restart or output files."
@@ -90,7 +90,7 @@ def parse_args() -> argparse.Namespace:
         default="metrics_results",
         help="Prefix to use for the result files.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     if not args.sim_path and not args.ref_sim_path:
         parser.error("You must provide --sim-path and/or --ref-sim-path.")
@@ -253,7 +253,7 @@ def _compute_means(
 
 def compute_diffs_and_stats(
     results: Mapping[str, xr.DataArray],
-    ref_results_with_prefix: Mapping[str, xr.DataArray],
+    ref_results: Mapping[str, xr.DataArray],
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     """
     Compute signed diff, absolute error, and MAE/RMSE vs reference for xarray inputs.
@@ -270,15 +270,14 @@ def compute_diffs_and_stats(
 
     for key, val in results.items():
         ref_key = f"ref_{key}"
-        if ref_key not in ref_results_with_prefix:
+        if ref_key not in ref_results:
             continue
 
-        ref_val = ref_results_with_prefix[ref_key]
+        ref_val = ref_results[ref_key]
 
         if not isinstance(val, xr.DataArray) or not isinstance(ref_val, xr.DataArray):
             err = "Error: expected xarray.DataArray on both sides"
             diffs[f"diff_{key}"] = err
-            diffs[f"diff_{key}_ae"] = err
             stats[f"diff_{key}_mae"] = err
             stats[f"diff_{key}_rmse"] = err
             continue
@@ -286,12 +285,10 @@ def compute_diffs_and_stats(
         try:
             delta, abs_err, mae, rmse = _compute_means(val, ref_val)
 
-            # Keep names helpful
-            delta = delta.rename(f"diff_{getattr(val, 'name', key)}")
-            abs_err = abs_err.rename(f"diff_{getattr(val, 'name', key)}_ae")
+            # keep names helpful
+            delta = delta.rename(f"diff_{key}")
 
             diffs[f"diff_{key}"] = delta
-            diffs[f"diff_{key}_ae"] = abs_err
             stats[f"diff_{key}_mae"] = mae if np.isfinite(mae) else np.nan
             stats[f"diff_{key}_rmse"] = rmse if np.isfinite(rmse) else np.nan
 
@@ -305,9 +302,7 @@ def compute_diffs_and_stats(
     return diffs, stats
 
 
-# -----------------------------
-# Orchestration
-# -----------------------------
+# restart mode
 def run_restart_metrics(
     data: Mapping[str, Any], data_ref: Optional[Mapping[str, Any]] = None
 ) -> Dict[str, Any]:
@@ -323,6 +318,7 @@ def run_restart_metrics(
     return results
 
 
+# output mode
 def run_output_metrics(
     data: Mapping[str, Any], data_ref: Optional[Mapping[str, Any]] = None
 ) -> Dict[str, Any]:
@@ -340,9 +336,9 @@ def run_output_metrics(
     return results
 
 
-def main() -> None:
+def main(argv=None) -> int:
     """Command-line interface for computing climate model diagnostics."""
-    args = parse_args()
+    args = parse_args(argv)
     dino_setup = load_config(args.config, args.sim_path)
     ensure_results_dir(args.results_dir)
     prefix: str = args.result_file_prefix
@@ -367,6 +363,8 @@ def main() -> None:
         out_path = os.path.join(args.results_dir, f"{prefix}_grid")
         write_metric_results(results_grid, out_path)
 
+    return 0
+
 
 ##################################
 ### Running spinup-evaluation ####
@@ -381,4 +379,4 @@ def main() -> None:
 # to determine which files to load and which variables to map.
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

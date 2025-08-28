@@ -1,0 +1,9 @@
+metric,mae,rmse
+ACC_Drake_metric,15.201226,15.364698
+ACC_Drake_metric_2,15.201226,15.364698
+NASTG_BSF_max,0.580229,0.608608
+check_density_computed,0.003717,0.005069
+check_density_from_file,0.000217,0.000264
+temperature_500m_30NS_metric,0.327091,0.345300
+temperature_BWbox_metric,0.587718,0.619759
+temperature_DWbox_metric,0.001615,0.001621

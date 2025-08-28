@@ -69,10 +69,12 @@ def write_metric_results(results: Mapping[str, Any], out_path: str) -> None:
         .reset_index()
     )
 
-    ts_path = f"{out_path}_timeseries.csv"
+    ts_path = f"{out_path}.csv"
     sm_path = f"{out_path}_summary.csv"
+
     os.makedirs(os.path.dirname(os.path.abspath(ts_path)), exist_ok=True)
+
     print(f"Writing timeseries metrics to '{ts_path}'")
-    ts_df.to_csv(ts_path, index=False)
+    ts_df.to_csv(ts_path, float_format="%.6f", index=False)
     print(f"Writing summary metrics to '{sm_path}'")
-    summary_df.to_csv(sm_path, index=False)
+    summary_df.to_csv(sm_path, float_format="%.6f", index=False)
