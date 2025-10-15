@@ -2,6 +2,7 @@
 
 import glob
 import os
+from pathlib import Path
 from typing import Dict, Mapping, Optional, Union
 
 import xarray as xr
@@ -120,17 +121,24 @@ def _normalise_var_specs(
     return normalised
 
 
-def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> str:
+def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> Path:
     """Resolve the mesh mask path, handling absolute and relative paths."""
-    if os.path.isabs(mesh_mask):
-        return mesh_mask
-    else:
-        return os.path.join(sim_path, mesh_mask)
+    p = Path(mesh_mask)
+    candidate = p if p.is_absolute() else Path(sim_path) / mesh_mask
+    if not candidate.exists():
+        hint = (
+            "Set `mesh_mask` to an absolute path in your YAML, "
+            "or ensure it exists under --sim-path."
+        )
+        msg = f"Mesh mask file not found: {candidate}. {hint}"
+        raise FileNotFoundError(msg)
+
+    return candidate
 
 
-def load_mesh_mask(path: str) -> xr.Dataset:
+def load_mesh_mask(path: Path) -> xr.Dataset:
     """Load the NEMO mesh mask file and validate required fields."""
-    if not os.path.exists(path):
+    if not path.exists():
         msg = f"Mesh mask file not found: {path}"
         raise FileNotFoundError(msg)
     ds = xr.open_dataset(path)
