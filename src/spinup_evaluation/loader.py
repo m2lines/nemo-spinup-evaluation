@@ -120,8 +120,19 @@ def _normalise_var_specs(
     return normalised
 
 
+def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> str:
+    """Resolve the mesh mask path, handling absolute and relative paths."""
+    if os.path.isabs(mesh_mask):
+        return mesh_mask
+    else:
+        return os.path.join(sim_path, mesh_mask)
+
+
 def load_mesh_mask(path: str) -> xr.Dataset:
     """Load the NEMO mesh mask file and validate required fields."""
+    if not os.path.exists(path):
+        msg = f"Mesh mask file not found: {path}"
+        raise FileNotFoundError(msg)
     ds = xr.open_dataset(path)
     required_vars = ["tmask", "e1t", "e2t", "e3t_0"]
     missing = [v for v in required_vars if v not in ds.variables]
@@ -237,7 +248,10 @@ def load_dino_data(
     if "mesh_mask" not in setup:
         msg = "setup must specify 'mesh_mask'."
         raise ValueError(msg)
-    mesh_mask_path = os.path.join(base, str(setup["mesh_mask"]))
+
+    # Resolve mesh mask path
+    mesh_mask_path = resolve_mesh_mask(str(setup["mesh_mask"]), base)
+
     data["mesh_mask"] = load_mesh_mask(mesh_mask_path)
 
     # restart (optional / controlled by mode)
