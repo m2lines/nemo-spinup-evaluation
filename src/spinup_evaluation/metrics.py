@@ -1,4 +1,4 @@
-"""Core metrics functions to evaluate the simulations and projections."""
+"""Core metrics to evaluate physical consistency of simulations and projections."""
 
 # Adapted from https://github.com/Etienne-Meunier/Metrics-Ocean
 # Original author: Etienne Meunier
@@ -8,29 +8,31 @@ import xarray
 
 def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     """
-    Return the proportion of points not respecting the density decreasing constraint.
+    Check density monotonicity violations in ocean data.
 
-    The density should decrease with depth, so the difference between the density at
-    a given depth and the density at the next depth should be negative.
+    Calculate the proportion of grid points at each time step where
+    the density profile violates the monotonic-with-depth constraint.
 
     Parameters
     ----------
     density : xarray.DataArray
-        DataArray (t, depth, lat, lon) with density value for each point of the
-        grid.
-    epsilon : float
-        Threshold for the density difference. Default is 1e-5.
+        A 4D DataArray with dimensions including 'time_counter', 'depth',
+        'nav_lat', and 'nav_lon'. Represents the density field over time and space.
+    epsilon : float, optional
+        A small threshold used to determine significant non-monotonicity.
+        Default is 1e-5.
 
     Returns
     -------
-    float
-        Proportion of points not respecting density decreasing constraint
+    xarray.DataArray
+        1D DataArray (over time_counter), with the proportion of grid points (per
+        time step) where density increases with depth beyond the epsilon threshold.
+        Length is 1 if only a single time step is present.
     """
     density = density.where(density != 0)
     diff = density - density.shift(depth=-1)
-    return (
-        (diff > epsilon).mean().data
-    )  # Proportion of points not respecting decreasing density
+    bad_prop = (diff > epsilon).mean(dim=["depth", "nav_lat", "nav_lon"])
+    return bad_prop
 
 
 def temperature_500m_30NS_metric(
@@ -51,12 +53,17 @@ def temperature_500m_30NS_metric(
 
     Returns
     -------
-    float
-        np.float32 or np.float64 depending on recording precision of simulation files.
+    xarray.DataArray
+        1D DataArray (over time_counter), representing the area-weighted mean
+        temperature at 500m between 30N and 30S. Length is 1 if only a single time step
+        is present.
     """
     # Taking Temperature At 500m depth and between 30N and 30S.
-    t500_30NS = temperature.sel(depth=500, method="nearest").where(
-        abs(temperature.nav_lat) < 30,  # noqa: PLR2004
+    DEPTH = 500  # m : upper bound for deep water box
+    LAT_BOUND = 30  # degrees N/S : tropical boundary
+
+    t500_30NS = temperature.sel(depth=DEPTH, method="nearest").where(
+        abs(temperature.nav_lat) < LAT_BOUND,
         drop=False,
     )
 
@@ -67,8 +74,8 @@ def temperature_500m_30NS_metric(
     area_500m_30NS = (
         e1t
         * e2t
-        * tmask.sel(depth=500, method="nearest").where(
-            abs(temperature.nav_lat) < 30,  # noqa: PLR2004
+        * tmask.sel(depth=DEPTH, method="nearest").where(
+            abs(temperature.nav_lat) < LAT_BOUND,
             drop=False,
         )
     )
@@ -79,7 +86,7 @@ def temperature_500m_30NS_metric(
     ) / area_500m_30NS.sum(dim=["nav_lat", "nav_lon"])
 
 
-def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset):
+def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Dataset):
     """
     Metric Extraction in a "Bottom Water" box.
 
@@ -100,7 +107,7 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Parameters
     ----------
-    thetao    : xarray.DataArray
+    temperature    : xarray.DataArray
         Temperature data (t, depth, lat, lon) with temperature value for each point of
         the grid.
     file_mask : xarray.Dataset
@@ -108,17 +115,30 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Returns
     -------
-    float
-        np.float32 or np.float64 depending on recording precision of simulation files.
+    xarray.DataArray
+        1D DataArray (over time_counter), representing the area-weighted mean
+        temperature in the Bottom Water box. Length is 1 if only a single time step
+        is present.
     """
-    t_BW = thetao.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+    BD_DEPTH_MIN = 3000  # m : bottom water box lower bound
+    LAT_BOUND = 30  # degrees N/S : tropical boundary
+
+    t_BW = temperature.where(
+        1 - (temperature.depth < BD_DEPTH_MIN) * (abs(temperature.nav_lat) < LAT_BOUND)
+    )
 
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
     area_BW = (
-        e1t * e2t * tmask.where(1 - (thetao.depth < 3000) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+        e1t
+        * e2t
+        * tmask.where(
+            1
+            - (temperature.depth < BD_DEPTH_MIN)
+            * (abs(temperature.nav_lat) < LAT_BOUND)
+        )
     )
 
     # Returning Average Temperature on Box
@@ -127,7 +147,7 @@ def temperature_BWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
     )
 
 
-def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset):
+def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Dataset):
     """
     Metric Extraction in a "Deep Water" box.
 
@@ -148,7 +168,7 @@ def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Parameters
     ----------
-    thetao    : xarray.DataArray
+    temperature    : xarray.DataArray
         Temperature data (t, depth, lat, lon) with temperature value for each point of
         the grid.
     file_mask : xarray.Dataset
@@ -156,19 +176,31 @@ def temperature_DWbox_metric(thetao: xarray.DataArray, file_mask: xarray.Dataset
 
     Returns
     -------
-    float
-       np.float32 or np.float64 depending on recording precision of simulation files.
+    xarray.DataArray
+        1D DataArray (over time_counter), representing the area-weighted mean
+        temperature in the Deep Water box. Length is 1 if only a single time step
+        is present.
     """
+    DW_DEPTH_MID = 1750  # m : deep water mid depth
+    DW_DEPTH_HW = 1250  # m : half-width around mid depth
+    LAT_BOUND = 30  # degrees N/S : tropical boundary
+
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     tmask = file_mask.tmask.squeeze()
-    t_DW = thetao.where((abs(thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+    t_DW = temperature.where(
+        (abs(temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW)
+        * (abs(temperature.nav_lat) < LAT_BOUND)
+    )
 
     # Computing Area Weights from Mask over Box
     area_DW = (
         e1t
         * e2t
-        * tmask.where(abs((thetao.depth - 1750) < 1250) * (abs(thetao.nav_lat) < 30))  # noqa: PLR2004
+        * tmask.where(
+            abs((temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW)
+            * (abs(temperature.nav_lat) < LAT_BOUND)
+        )
     )
 
     # Returning Average Temperature on Box
@@ -199,8 +231,9 @@ def ACC_Drake_metric(uo, file_mask):
 
     Returns
     -------
-    float
-        np.float32 or np.float64 depending on recording precision of simulation files.
+    xarray.DataArray
+        1D DataArray (over time_counter), representing the total transport across Drake
+        Passage (in Sv). Length is 1 if only a single time step is present.
     """
     umask_Drake = file_mask.umask.isel(nav_lon=0).squeeze()
     e3u = file_mask.e3u_0.squeeze()
@@ -216,7 +249,6 @@ def ACC_Drake_metric(uo, file_mask):
 
     ubar = u_masked * e3u_masked
     flux = (e2u_masked * ubar).sum(dim=["nav_lat", "depth"])
-
     # Returning Total Transport across Drake passage as a numpy scalar (unit : Sv)
     return flux / 1e6
 
@@ -247,30 +279,28 @@ def ACC_Drake_metric_2(
 
     Returns
     -------
-    float
-        np.float32 or np.float64 depending on recording precision of simulation files.
+    xarray.DataArray
+        1D DataArray (over time_counter), representing the total transport across Drake
+        Passage (in Sv). Length is 1 if only a single time step is present.
     """
-    e3u_0 = file_mask.e3u_0
-    e2u = file_mask.e2u
-    umask_Drake = file_mask.umask.isel(nav_lon=0)
+    umask_Drake = file_mask.umask.isel(nav_lon=0).squeeze()
+    e3u_0 = file_mask.e3u_0.squeeze()
+    e2u = file_mask.e2u.squeeze()
 
     # Recomputing e3u, using ssh to refactor the original e3u_0 cell heights)
-    ssh_u = (ssh + ssh.roll(_nav_lon=-1)) / 2
+    ssh_u = (ssh + ssh.roll(nav_lon=-1)) / 2
     bathy_u = e3u_0.sum(dim="depth")
     ssumask = umask_Drake[:, 0]
     e3u = e3u_0 * (1 + ssh_u * ssumask / (bathy_u + 1 - ssumask))
-
     # Masking the variables onto the Drake Passage
     u_masked = uo.isel(nav_lon=0) * umask_Drake
     e3u_masked = e3u.isel(nav_lon=0) * umask_Drake
     e2u_masked = e2u.isel(nav_lon=0) * umask_Drake
-
     # Multiplying zonal velocity by the sectional areas (e2u*e3u)
-    ubar = (u_masked * e3u_masked).sum(dim="depth")
-    flux = (e2u_masked * ubar).sum()
-
+    ubar = u_masked * e3u_masked
+    flux = (e2u_masked * ubar).sum(dim=["nav_lat", "depth"])
     # Return Total Transport across Drake passage as a numpy scalar (unit : Sv)
-    return flux.data / 1e6
+    return flux / 1e6
 
 
 def NASTG_BSF_max(
@@ -296,8 +326,10 @@ def NASTG_BSF_max(
 
     Returns
     -------
-    float
-       np.float32 or np.float64 depending on recording precision of simulation files.
+    xarray.DataArray
+        1D DataArray (over time_counter), representing the maximum Barotropic Stream
+        Function in the NASTG region (in Sv). Length is 1 if only a single time step
+        is present.
     """
     e3v_0 = file_mask.e3v_0.squeeze()
     e1v = file_mask.e1v.squeeze()
@@ -321,5 +353,5 @@ def NASTG_BSF_max(
     BSF_NASPG = BSF.where(abs(BSF.nav_lat - 20) < 20)  # noqa: PLR2004
 
     # Selecting the maximum value of the BSF in the selected window
-    # and return it as a numpy scalar68G
+    # and return it as a numpy scalar
     return BSF_NASPG.max(dim=["nav_lat", "nav_lon"])

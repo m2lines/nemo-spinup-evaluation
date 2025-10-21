@@ -1,9 +1,9 @@
-"""Helper functions for running the metrics functions."""
+"""Utility functions to support metric evaluation."""
 
 import numpy as np
 
 
-def get_deptht(restart, mask):
+def get_depth(restart, mask):
     """
     Calculate the depth of each vertical level on grid T in the 3D grid.
 
@@ -19,7 +19,7 @@ def get_deptht(restart, mask):
     deptht   : numpy.array
         The depth of each vertical level.
     """
-    ssh = restart.sshn.squeeze()
+    ssh = restart.ssh.squeeze()
     e3w_0 = (
         mask.e3w_0.squeeze()
     )  # initial z axis cell's thickness on grid W - (t,z,y,x)

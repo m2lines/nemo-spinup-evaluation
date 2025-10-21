@@ -1,0 +1,41 @@
+name: ci-evals
+on:
+  # Triggers the workflow on pushes to the "main" branch, i.e., PR merges
+  push:
+    branches: [ "main" ]
+
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.10' }
+      - run: python -m pip install --upgrade pip && python -m pip install ruff
+      - run: ruff format --diff .
+      - run: ruff check --diff .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.10' }
+      - run: |
+          python -m pip install --upgrade pip
+          python -m venv eval_venv
+          . eval_venv/bin/activate
+          pip install .[dev]
+      - name: Download and extract test data
+        run: |
+          chmod +x tests/get-data.sh
+          ./tests/get-data.sh
+      - name: Run tests
+        run: |
+          . eval_venv/bin/activate
+          pytest -v tests/
