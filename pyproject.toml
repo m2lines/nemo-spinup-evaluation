@@ -39,6 +39,13 @@ dev = [
     "pre-commit",
 ]
 
+[project.optional-dependencies]
+docs = [
+  "sphinx",
+  "sphinx-rtd-theme",
+  "myst-parser"
+]
+
 [project.urls]
 Repository = "https://github.com/m2lines/nemo-spinup-evaluation"
 Issues = "https://github.com/m2lines/nemo-spinup-evaluation/issues"
