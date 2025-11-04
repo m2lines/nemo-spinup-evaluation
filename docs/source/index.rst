@@ -16,4 +16,5 @@ Spinup-Evaluation documentation
    Evaluation-Modes.md
    Model-Configuration.md
    Command-Line-Interface.md
+   New-Metrics.md
    modules
