@@ -6,5 +6,7 @@ Spinup-Evaluation documentation
    :caption: Contents
 
 
-   README
+   README.md
+   Command-Line Interface.md
+   Evaluation.md
    modules
