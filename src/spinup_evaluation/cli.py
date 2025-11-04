@@ -145,7 +145,7 @@ def apply_metrics_restart(data: xr.Dataset, mask: xr.Dataset) -> Dict[str, Any]:
         ),
         # Name suggests temperature, but kept as-is from original code.
         "temperature_DWbox_metric": lambda d: temperature_DWbox_metric(
-            d["velocity_u"][0], mask
+            d["temperature"][0], mask
         ),
         "ACC_Drake_metric": lambda d: ACC_Drake_metric(d["velocity_u"][0], mask),
         "ACC_Drake_metric_2": lambda d: ACC_Drake_metric_2(
@@ -187,7 +187,7 @@ def apply_metrics_output(
         ),
         # Name suggests temperature, but kept aligned with original mapping:
         "temperature_DWbox_metric": lambda: temperature_DWbox_metric(
-            grid_output["velocity_u"], mask
+            grid_output["temperature"], mask
         ),
         "ACC_Drake_metric": lambda: ACC_Drake_metric(grid_output["velocity_u"], mask),
         "ACC_Drake_metric_2": lambda: ACC_Drake_metric_2(
