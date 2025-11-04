@@ -7,6 +7,6 @@ The diagram below (Figure 1) illustrates the typical evaluation procedure. Model
 Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m2lines/nemo-spinup-forecast), which automates the generation of machine learned spin-up states for NEMO/DINO models. Together, these tools provide a robust workflow for accelerating ocean spin-up.
 
 <p align="center">
-<img src="diagram.png" alt="NEMO flow" width="500"/>
+<img src="_static/diagram.png" alt="NEMO flow" width="500"/>
 <figcaption>Fig 1. Evaluation flow diagram illustrating the coupling to spinup-forecast, but spinup-evaluation can in theory be used to evaluate any ocean model, be it ML data driven, numerical or otherwise. </figcaption>
 </p>
