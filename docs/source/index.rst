@@ -9,6 +9,6 @@ Spinup-Evaluation documentation
    :caption: Contents
 
 
-   Command-Line Interface.md
+   Command-Line-Interface.md
    Evaluation.md
    modules
