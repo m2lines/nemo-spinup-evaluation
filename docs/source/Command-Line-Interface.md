@@ -4,7 +4,6 @@
 
 The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
 
-
 ```sh
 python -m spinup_evaluation.cli \
   --sim-path <simulation_dir>            # Required: path to simulation directory
