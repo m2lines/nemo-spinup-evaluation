@@ -18,7 +18,7 @@ Spinup-Evaluation provides a command-line tool and Python API for benchmarking t
 
 
 
-## Evaluation Flow
+<!-- ## Evaluation Flow
 
 Spinup-Evaluation is designed to assess the quality and stability of ocean model spin-up and restart states, as well as time-averaged outputs. The evaluation workflow is flexible: you can analyse a single simulation, or compare a simulation against a reference (e.g., a previous spin-up, a control run, or a forecast). The tool supports both instantaneous (restart) and time-averaged (output) evaluation modes.
 
@@ -29,7 +29,7 @@ Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m
 <p align="center">
 <img src="diagram.png" alt="NEMO flow" width="500"/>
 <figcaption>Fig 1. Evaluation flow diagram illustrating the coupling to spinup-forecast, but spinup-evaluation can in theory be used to evaluate any ocean model, be it ML data driven, numerical or otherwise. </figcaption>
-</p>
+</p> -->
 
 ## Repository Layout
 
