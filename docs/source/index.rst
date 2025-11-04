@@ -11,7 +11,7 @@ Spinup-Evaluation documentation
    :caption: Contents
    :hidden:
 
-   Home <../../README.md>
+   Homepage <self>
    Evaluation.md
    Evaluation-Modes.md
    Model-Configuration.md
