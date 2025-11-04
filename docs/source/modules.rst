@@ -5,32 +5,50 @@ API Reference
    :maxdepth: 2
    :caption: Modules
 
-   spinup_eval.main
-   spinup_eval.metrics
-   spinup_eval.utils
+   spinup_evaluation.cli
+   spinup_evaluation.metrics
+   spinup_evaluation.metrics_io
+   spinup_evaluation.utils
+   spinup_evaluation.loader
 
 ------------------------
 
-spinup_eval.main module
+src/spinup_evaluation.loader module
 ------------------------
 
-.. automodule:: spinup_eval.main
+.. automodule:: spinup_evaluation.loader
    :members:
    :undoc-members:
    :show-inheritance:
 
-spinup_eval.metrics module
+spinup_evaluation.metrics module
 --------------------------
 
-.. automodule:: spinup_eval.metrics
+.. automodule:: spinup_evaluation.metrics
    :members:
    :undoc-members:
    :show-inheritance:
 
-spinup_eval.utils module
+spinup_evaluation.metrics_io module
 ------------------------
 
-.. automodule:: spinup_eval.utils
+.. automodule:: spinup_evaluation.metrics_io
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+spinup_evaluation.utils module
+------------------------
+
+.. automodule:: spinup_evaluation.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+spinup_evaluation.cli module
+------------------------
+
+.. automodule:: spinup_evaluation.cli
    :members:
    :undoc-members:
    :show-inheritance:
