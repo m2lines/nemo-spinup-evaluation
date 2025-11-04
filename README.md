@@ -53,7 +53,7 @@ Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m
 └── results/                        # Default output directory for metrics CSVs
 ```
 
-## Command-Line Usage
+<!-- ## Command-Line Usage
 
 The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
 
@@ -142,7 +142,7 @@ output_variables:
   ssh: grid_T_2D.nc
   velocity_u: grid_U_3D.nc
   velocity_v: grid_V_3D.nc
-```
+``` -->
 
 ## Output Files
 
