@@ -1,7 +1,7 @@
 Spinup-Evaluation documentation
 ===============================
 
-.. include:: README.md
+.. include:: ../../README.md
    :parser: myst_parser.sphinx_
 
 .. toctree::
@@ -9,7 +9,6 @@ Spinup-Evaluation documentation
    :caption: Contents
 
 
-   README.md
    Command-Line Interface.md
    Evaluation.md
    modules
