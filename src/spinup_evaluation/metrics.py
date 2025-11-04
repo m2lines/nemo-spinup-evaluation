@@ -130,10 +130,21 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
+    e3t = file_mask.e3t_0.squeeze()
     tmask = file_mask.tmask.squeeze()
-    area_BW = (
+    # area_BW = (
+    #     e1t
+    #     * e2t
+    #     * tmask.where(
+    #         1
+    #         - (temperature.depth < BD_DEPTH_MIN)
+    #         * (abs(temperature.nav_lat) < LAT_BOUND)
+    #     )
+    # )
+    vol_BW = (
         e1t
         * e2t
+        * e3t
         * tmask.where(
             1
             - (temperature.depth < BD_DEPTH_MIN)
@@ -142,7 +153,7 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     )
 
     # Returning Average Temperature on Box
-    return (t_BW * area_BW).sum(dim=["nav_lat", "nav_lon", "depth"]) / area_BW.sum(
+    return (t_BW * vol_BW).sum(dim=["nav_lat", "nav_lon", "depth"]) / vol_BW.sum(
         dim=["nav_lat", "nav_lon", "depth"]
     )
 
