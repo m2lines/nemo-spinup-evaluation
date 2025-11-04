@@ -8,7 +8,7 @@ Spinup-Evaluation documentation
    :maxdepth: 4
    :caption: Contents
 
-
+   Home <../../README.md>
    Command-Line-Interface.md
    Evaluation.md
    modules
