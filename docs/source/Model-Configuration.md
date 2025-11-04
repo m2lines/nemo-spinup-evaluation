@@ -1,6 +1,9 @@
 """ This page id dedicated to elaborate the configuration files for ocean models """
 
-# DINO Config File
+
+# Model Configuration
+
+## DINO Config File
 
 The YAML config (e.g., `configs/DINO-setup.yaml`) maps variable names to NetCDF files. You can specify variables in two ways:
 
