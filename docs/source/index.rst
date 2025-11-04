@@ -10,5 +10,6 @@ Spinup-Evaluation documentation
 
    Home <../../README.md>
    Command-Line-Interface.md
+   Evaluation-Modes.md
    Evaluation.md
    modules
