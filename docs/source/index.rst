@@ -12,4 +12,5 @@ Spinup-Evaluation documentation
    Command-Line-Interface.md
    Evaluation-Modes.md
    Evaluation.md
+   Model-configuration.md
    modules
