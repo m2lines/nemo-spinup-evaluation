@@ -144,7 +144,7 @@ output_variables:
   velocity_v: grid_V_3D.nc
 ``` -->
 
-## Output Files
+<!-- ## Output Files
 
 - Results are written as CSV files in the results directory, e.g.:
   - `results/metrics_results_restart.csv`
@@ -165,7 +165,7 @@ To run all tests:
 
 ```sh
 pytest tests/
-```
+``` -->
 
 ## Development & Installation
 
@@ -180,9 +180,9 @@ pip install -e .[dev]
 pre-commit install
 ```
 
-## Adding New Metrics
+<!-- ## Adding New Metrics
 
-Add new metric functions to `src/spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed.
+Add new metric functions to `src/spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed. -->
 
 ## Acknowledgements
 
