@@ -1,5 +1,3 @@
-"""This page is dedicated to explaining the evaluation process and metrics."""
-
 ## Evaluation
 
 Spinup-Evaluation is designed to assess the quality and stability of ocean model spin-up and restart states, as well as time-averaged outputs. The evaluation workflow is flexible: you can analyse a single simulation, or compare a simulation against a reference (e.g., a previous spin-up, a control run, or a forecast). The tool supports both instantaneous (restart) and time-averaged (output) evaluation modes.

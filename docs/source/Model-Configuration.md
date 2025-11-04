@@ -1,6 +1,3 @@
-""" This page id dedicated to elaborate the configuration files for ocean models """
-
-
 # Model Configuration
 
 ## DINO Config File

@@ -1,5 +1,3 @@
-""" This page is dedicated to explain different modes of evaluation available in the toolbox."""
-
 ## Evaluation Modes
 
 Spinup-Evaluation supports three modes, controlled by the `--mode` argument:
