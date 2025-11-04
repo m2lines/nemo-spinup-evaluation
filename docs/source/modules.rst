@@ -1,5 +1,5 @@
-API Reference
-=============
+Functions and Variables
+=======================
 
 .. toctree::
    :maxdepth: 2
