@@ -1,5 +1,3 @@
-"""This page is dedicated to providing the linux commands to run the data files for evaluation."""
-
 ## Command-Line Usage
 
 The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
