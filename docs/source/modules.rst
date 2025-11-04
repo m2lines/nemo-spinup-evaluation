@@ -13,7 +13,7 @@ Functions and Variables
 
 ------------------------
 
-src/spinup_evaluation.loader module
+Loader module
 ------------------------
 
 .. automodule:: spinup_evaluation.loader
@@ -21,7 +21,7 @@ src/spinup_evaluation.loader module
    :undoc-members:
    :show-inheritance:
 
-spinup_evaluation.metrics module
+Metrics module
 --------------------------
 
 .. automodule:: spinup_evaluation.metrics
@@ -29,7 +29,7 @@ spinup_evaluation.metrics module
    :undoc-members:
    :show-inheritance:
 
-spinup_evaluation.metrics_io module
+Metrics_io module
 ------------------------
 
 .. automodule:: spinup_evaluation.metrics_io
@@ -37,7 +37,7 @@ spinup_evaluation.metrics_io module
    :undoc-members:
    :show-inheritance:
 
-spinup_evaluation.utils module
+Utils module
 ------------------------
 
 .. automodule:: spinup_evaluation.utils
@@ -45,7 +45,7 @@ spinup_evaluation.utils module
    :undoc-members:
    :show-inheritance:
 
-spinup_evaluation.cli module
+CLI module
 ------------------------
 
 .. automodule:: spinup_evaluation.cli
