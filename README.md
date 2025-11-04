@@ -4,7 +4,7 @@
 
 Spinup-Evaluation provides a command-line tool and Python API for benchmarking the spin-up and restart performance of NEMO/DINO ocean models and machine learning emulators. It supports both single-run and comparison (reference) evaluation, and outputs detailed metrics and difference statistics.
 
-📖 Full documentation is available on [ReadTheDocs](https://nemo-spinup-evaluation.readthedocs.io/en/latest/).
+<!-- 📖 Full documentation is available on [ReadTheDocs](https://nemo-spinup-evaluation.readthedocs.io/en/latest/). -->
 
 
 ## Features
