@@ -45,3 +45,6 @@ output_variables:
   velocity_u: grid_U_3D.nc
   velocity_v: grid_V_3D.nc
 ```
+
+
+## OM4 Config File
