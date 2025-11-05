@@ -29,8 +29,8 @@ VARIABLE_ALIASES = {
         "depthu",
         "depthv",
     ],  # Depth can be 'depth', 'nav_lev', or 'deptht'
-    "latitude": ["nav_lat", "y"],  # Latitude can be 'nav_lat' or 'y'
-    "longitude": ["nav_lon", "x"],  # Longitude can be 'nav_lon' or 'x'
+    # "latitude": ["nav_lat", "y"],  # Latitude can be 'nav_lat' or 'y'
+    # "longitude": ["nav_lon", "x"],  # Longitude can be 'nav_lon' or 'x'
     "ssh": ["sshn", "ssh"],  # Sea surface height could be 'sshn' or 'ssh'
     "time_counter": [
         "time_counter",
@@ -72,14 +72,23 @@ def standardise(dataset, variable_dict):
                 break
 
     ds = ds.rename(rename_map)
+    breakpoint()
 
-    if "x" in ds.dims:
-        ds = ds.rename({"x": "nav_lon"})
-    if "y" in ds.dims:
-        ds = ds.rename({"y": "nav_lat"})
+    # if "x" in ds.dims:
+    #     ds = ds.rename({"x": "nav_lon"})
+    # if "y" in ds.dims:
+    #     ds = ds.rename({"y": "nav_lat"})
+
+    # Promote nav_lat and nav_lon to coordinates if they are not already
+    # Error is exhibited in DINO restart file
+    for name in ("nav_lat", "nav_lon"):
+        if name in ds and name not in ds.coords:
+            ds = ds.set_coords(name)  # zero-copy promotion to coordinate
 
     if is_da:
         new_name = rename_map.get(orig_name, orig_name)
         return ds[new_name]
+
+    # breakpoint()
 
     return ds
