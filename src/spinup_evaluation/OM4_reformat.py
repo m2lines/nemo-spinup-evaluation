@@ -7,7 +7,7 @@ import xarray as xr
 
 # Open the Zarr dataset
 input_path = "/home/sg2147/Samudra_data/data.zarr"
-output_path = "/home/sg2147/Samudra_data/OM4_reformatted/om4_combined.nc"
+output_path = "/home/sg2147/Samudra_data/OM4-reformatted/om4_combined.nc"
 
 
 ds = xr.open_zarr(input_path, consolidated=True)
@@ -35,15 +35,16 @@ def combine_levelwise_variables(ds, base_name):
         return None
 
     # Sort by depth level
-    levels, level_vars = zip(*sorted(zip(levels, level_vars), key=lambda x: x[0]))
+    sorted_vars = [v for _, v in sorted(zip(levels, level_vars), key=lambda x: x[0])]
+    sorted_levels = sorted(levels)
 
-    # Concatenate along new dimension
-    combined = xr.concat(level_vars, dim="lev")
+    # Stack along a new 'lev' dimension
+    combined = xr.concat(sorted_vars, dim="lev")
+    combined = combined.assign_coords(lev=("lev", sorted_levels))
 
-    # Assign coordinate for lev
-    combined = combined.assign_coords(lev=("lev", list(levels)))
+    # Reorder dimensions: (time, lev, y, x)
+    combined = combined.transpose("time", "lev", "y", "x")
 
-    print(f"Combined {len(levels)} levels for '{base_name}'")
     return combined
 
 
@@ -53,3 +54,24 @@ thetao_4d = combine_levelwise_variables(ds, "thetao")  # temperature
 
 # Get sea surface height variable
 zos = ds.get("zos", None)
+
+# create new dataset with combined variables
+output_vars = {}
+if so_4d is not None:
+    output_vars["so"] = so_4d
+if thetao_4d is not None:
+    output_vars["thetao"] = thetao_4d
+if zos is not None:
+    output_vars["zos"] = zos
+
+ds_combined = xr.Dataset(output_vars)
+
+# Add global attributes
+ds_combined.attrs["title"] = "OM4 data reformatted to NEMO-like structure"
+ds_combined.attrs["source"] = "Converted from OM4 Zarr"
+ds_combined.attrs["created_by"] = "convert_om4_zarr_to_nemo_like_nc.py"
+
+# Save to NetCDF
+print(f"Saving combined dataset to {output_path}")
+ds_combined.to_netcdf(output_path)
+print("File saved successfully.")
