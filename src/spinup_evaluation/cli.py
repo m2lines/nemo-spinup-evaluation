@@ -13,7 +13,7 @@ import argparse
 import os
 import sys
 import warnings
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, Mapping, Optional, Tuple, cast
 
 import numpy as np
 import xarray as xr
@@ -352,16 +352,20 @@ def main(argv=None) -> int:
             args.mode, args.ref_sim_path, dino_setup, do_standardise=True
         )
 
+    # Extract paths with proper type cast
+    paths = cast(dict[str, str], data.get("paths", {}))
+    print("Data paths:", paths)
+
     # Run suites
     if args.mode in {"restart", "both"}:
         results_restart = run_restart_metrics(data, data_ref)
         out_path = os.path.join(args.results_dir, f"{prefix}_restart")
-        write_metric_results(results_restart, out_path)
+        write_metric_results(results_restart, out_path, paths)
 
     if args.mode in {"output", "both"}:
         results_grid = run_output_metrics(data, data_ref)
         out_path = os.path.join(args.results_dir, f"{prefix}_grid")
-        write_metric_results(results_grid, out_path)
+        write_metric_results(results_grid, out_path, paths)
 
     return 0
 
