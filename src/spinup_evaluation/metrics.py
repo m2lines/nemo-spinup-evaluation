@@ -32,6 +32,7 @@ def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     density = density.where(density != 0)
     diff = density - density.shift(depth=-1)
     bad_prop = (diff > epsilon).mean(dim=["depth", "y", "x"])
+
     return bad_prop
 
 
@@ -66,7 +67,6 @@ def temperature_500m_30NS_metric(
         abs(temperature.nav_lat) < LAT_BOUND,
         drop=False,
     )
-
     # Computing Area Weights from Mask over 30N-30S latitude zone and @500m depth
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
@@ -79,7 +79,6 @@ def temperature_500m_30NS_metric(
             drop=False,
         )
     )
-
     # Returning Average Temperature at 500m depth as a numpy scalar
     return (t500_30NS * area_500m_30NS).sum(dim=["y", "x"]) / area_500m_30NS.sum(
         dim=["y", "x"]
@@ -127,13 +126,16 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
         1 - (temperature.depth < BD_DEPTH_MIN) * (abs(temperature.nav_lat) < LAT_BOUND)
     )
 
+    breakpoint()
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
+    e3t = file_mask.e3t_0.squeeze()
     tmask = file_mask.tmask.squeeze()
     area_BW = (
         e1t
         * e2t
+        * e3t
         * tmask.where(
             1
             - (temperature.depth < BD_DEPTH_MIN)
@@ -186,6 +188,7 @@ def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
 
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
+    e3t = file_mask.e3t_0.squeeze()
     tmask = file_mask.tmask.squeeze()
     t_DW = temperature.where(
         (abs(temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW)
@@ -196,13 +199,13 @@ def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     area_DW = (
         e1t
         * e2t
+        * e3t
         * tmask.where(
             abs((temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW)
             * (abs(temperature.nav_lat) < LAT_BOUND)
         )
     )
 
-    breakpoint()
     # Returning Average Temperature on Box
     return (t_DW * area_DW).sum(dim=["y", "x", "depth"]) / area_DW.sum(
         dim=["y", "x", "depth"]
@@ -350,7 +353,6 @@ def NASTG_BSF_max(
     ) / 1e6  # Integrating from the West, and converting from m³/s to Sv
     # Selecting 0N-40N window where to search for the maximum, which will correspond to
     # the center of rotation for the gyre
-    breakpoint()
     BSF_NASPG = BSF.where(abs(vo.nav_lat - 20) < 20)  # noqa: PLR2004
 
     # Selecting the maximum value of the BSF in the selected window

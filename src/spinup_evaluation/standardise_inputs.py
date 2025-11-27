@@ -29,8 +29,8 @@ VARIABLE_ALIASES = {
         "depthu",
         "depthv",
     ],  # Depth can be 'depth', 'nav_lev', or 'deptht'
-    # "latitude": ["nav_lat", "y"],  # Latitude can be 'nav_lat' or 'y'
-    # "longitude": ["nav_lon", "x"],  # Longitude can be 'nav_lon' or 'x'
+    # "nav_lat": ["nav_lat", "y", "lat"],  # Latitude can be 'nav_lat' or 'y'
+    # "nav_lon": ["nav_lon", "x", "lon"],  # Longitude can be 'nav_lon' or 'x'
     "ssh": ["sshn", "ssh"],  # Sea surface height could be 'sshn' or 'ssh'
     "time_counter": [
         "time_counter",
@@ -67,12 +67,8 @@ def standardise(dataset, variable_dict):
             if alias in ds.coords:
                 rename_map[alias] = std
                 break
-            if alias in ds.dims:
-                rename_map[alias] = std
-                break
 
     ds = ds.rename(rename_map)
-    breakpoint()
 
     # if "x" in ds.dims:
     #     ds = ds.rename({"x": "nav_lon"})
@@ -88,7 +84,5 @@ def standardise(dataset, variable_dict):
     if is_da:
         new_name = rename_map.get(orig_name, orig_name)
         return ds[new_name]
-
-    # breakpoint()
 
     return ds
