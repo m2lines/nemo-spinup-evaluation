@@ -150,12 +150,12 @@ def load_mesh_mask(path: Path) -> xr.Dataset:
     return ds
 
 
-def _find_restart_ds(base: str, restart_hint: Optional[str]) -> Optional[xr.Dataset]:
+def get_restart_file_path(base: str, restart_hint: Optional[str]) -> Optional[str]:
     """
-    Find and open a restart dataset.
+    Get the restart file path based on base directory and hint.
 
-    If restart_hint is provided (e.g., 'restart'), we look for *{hint}*.nc
-    Otherwise we try '*restart*.nc'
+    If restart_hint ends with '.nc', it is treated as a direct file name.
+    Otherwise, we search for files matching '*{hint}*.nc' in the base directory.
 
     Parameters
     ----------
@@ -164,11 +164,18 @@ def _find_restart_ds(base: str, restart_hint: Optional[str]) -> Optional[xr.Data
     restart_hint : Optional[str]
         An optional hint for the restart file name (e.g., 'restart').
 
-    Returns None if not found.
+    Returns
+    -------
+    Optional[str]
+        The path to the restart file if found, otherwise None.
     """
+    if restart_hint and restart_hint.endswith(".nc"):
+        candidate = os.path.join(base, restart_hint)
+        return candidate if os.path.exists(candidate) else None
+
     pattern_core = restart_hint if restart_hint else "restart"
     matches = sorted(glob.glob(os.path.join(base, f"*{pattern_core}*.nc")))
-    return xr.open_dataset(matches[0]) if matches else None
+    return matches[0] if matches else None
 
 
 def load_grid_variables(
@@ -246,11 +253,27 @@ def load_dino_data(
         "mesh_mask": xr.Dataset,
         "restart": xr.Dataset | None,
         "grid": {canon: xr.DataArray, ...},
-        "files": {relative_path: xr.Dataset, ...}  # the shared cache
+        "files": {relative_path: xr.Dataset, ...},
+        "paths": Dict[str, object] = {
+            "base": base,
+            "mesh_mask": None,
+            "restart": None,
+            "output_files": [],
+        }
       }
     """
+    base = os.path.abspath(base)
+
     data: Dict[str, object] = {}
     files_cache: Dict[str, xr.Dataset] = {}
+
+    # Initialize paths dictionary
+    paths: Dict[str, object] = {
+        "base": base,
+        "mesh_mask": None,
+        "restart": None,
+        "output_files": [],
+    }
 
     # mesh mask (required)
     if "mesh_mask" not in setup:
@@ -259,16 +282,20 @@ def load_dino_data(
 
     # Resolve mesh mask path
     mesh_mask_path = resolve_mesh_mask(str(setup["mesh_mask"]), base)
-
+    paths["mesh_mask"] = str(mesh_mask_path)
     data["mesh_mask"] = load_mesh_mask(mesh_mask_path)
 
     # restart (optional / controlled by mode)
     restart_hint = str(setup.get("restart_files") or "")
     if mode in ("restart", "both"):
-        data["restart"] = _find_restart_ds(base, restart_hint)
-        if data["restart"] is None:
+        restart_path = get_restart_file_path(base, restart_hint)
+        if restart_path is None:
             msg = "No restart file found matching pattern."
             raise FileNotFoundError(msg)
+        else:
+            paths["restart"] = restart_path
+            data["restart"] = xr.open_dataset(restart_path)
+            # data["files"][os.path.relpath(restart_path, base)] = data["restart"]
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
@@ -276,12 +303,20 @@ def load_dino_data(
         var_specs: VarSpec = setup["output_variables"]  # simple or rich form accepted
         # Load variables; this will populate a cache of files so
         # we do not have to keep reopening files we already opened
-        data["restart"] = _find_restart_ds(base, restart_hint)
+        restart_path = get_restart_file_path(base, restart_hint)
+        if restart_path is None:
+            msg = "No restart file found matching pattern."
+            raise FileNotFoundError(msg)
+        data["restart"] = xr.open_dataset(restart_path)
         vars_map = load_grid_variables(base, var_specs, files_cache)
         data["grid"].update(vars_map)
 
+        # Store the full paths to output files
+        paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
+
     # expose the file cache
     data["files"] = files_cache
+    data["paths"] = paths
     # dict_keys(['grid_T_3D.nc', 'grid_T_2D.nc', 'grid_U_3D.nc', 'grid_V_3D.nc'])
 
     # standardise names after loading has taken place
