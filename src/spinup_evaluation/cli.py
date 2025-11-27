@@ -143,7 +143,6 @@ def apply_metrics_restart(data: xr.Dataset, mask: xr.Dataset) -> Dict[str, Any]:
         "temperature_BWbox_metric": lambda d: temperature_BWbox_metric(
             d["temperature"][0], mask
         ),
-        # Name suggests temperature, but kept as-is from original code.
         "temperature_DWbox_metric": lambda d: temperature_DWbox_metric(
             d["temperature"][0], mask
         ),
@@ -185,7 +184,6 @@ def apply_metrics_output(
         "temperature_BWbox_metric": lambda: temperature_BWbox_metric(
             grid_output["temperature"], mask
         ),
-        # Name suggests temperature, but kept aligned with original mapping:
         "temperature_DWbox_metric": lambda: temperature_DWbox_metric(
             grid_output["temperature"], mask
         ),
