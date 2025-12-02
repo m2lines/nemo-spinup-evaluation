@@ -126,7 +126,6 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
         1 - (temperature.depth < BD_DEPTH_MIN) * (abs(temperature.nav_lat) < LAT_BOUND)
     )
 
-    breakpoint()
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
