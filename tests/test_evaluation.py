@@ -43,8 +43,8 @@ def output_file_path(tmp_path):
 
 
 def assert_csv_equal(path_a: str, path_b: str, float_tol: float = 1e-12) -> None:
-    df_a = pd.read_csv(path_a)
-    df_b = pd.read_csv(path_b)
+    df_a = pd.read_csv(path_a, comment="#")
+    df_b = pd.read_csv(path_b, comment="#")
 
     # same column sets
     assert set(df_a.columns) == set(df_b.columns), (
@@ -117,8 +117,8 @@ def test_integration_with_real_data(real_input_dir, output_file_path, run):
 
     elif run == "self_diff":
         # Load outputs and check all diffs are zero
-        grid_df = pd.read_csv(out_grid)
-        restart_df = pd.read_csv(out_restart)
+        grid_df = pd.read_csv(out_grid, comment="#")
+        restart_df = pd.read_csv(out_restart, comment="#")
 
         # Any column starting with "diff_" should be zero
         for df in (grid_df, restart_df):
@@ -130,10 +130,10 @@ def test_integration_with_real_data(real_input_dir, output_file_path, run):
 
         # For summary file: all MAE/RMSE should be zero
         summary_grid = pd.read_csv(
-            out_grid.with_name("metrics_results_grid_summary.csv")
+            out_grid.with_name("metrics_results_grid_summary.csv"), comment="#"
         )
         summary_restart = pd.read_csv(
-            out_restart.with_name("metrics_results_restart_summary.csv")
+            out_restart.with_name("metrics_results_restart_summary.csv"), comment="#"
         )
         for df in (summary_grid, summary_restart):
             assert np.allclose(df[["mae", "rmse"]].fillna(0).values, 0.0, atol=1e-12)
