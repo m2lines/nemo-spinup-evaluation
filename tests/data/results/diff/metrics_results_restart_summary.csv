@@ -1,9 +1,19 @@
+# Metric Evaluation
+# Base Directory: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A
+# Mesh Mask: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/mesh_mask.nc
+# Restart File: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/restart.nc
+# Output Files:
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_2D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_U_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_V_3D.nc
+#
 metric,mae,rmse
 ACC_Drake_metric,0.005991,0.005991
 ACC_Drake_metric_2,0.005991,0.005991
-NASTG_BSF_max,0.004595,0.004595
+NASTG_BSF_max,0.003367,0.003367
 check_density_computed,0.177241,0.177241
 check_density_from_file,0.453650,0.453650
-temperature_500m_30NS_metric,0.000128,0.000128
-temperature_BWbox_metric,0.000023,0.000023
-temperature_DWbox_metric,0.000000,0.000000
+temperature_500m_30NS_metric,0.000050,0.000050
+temperature_BWbox_metric,0.000034,0.000034
+temperature_DWbox_metric,0.000014,0.000014

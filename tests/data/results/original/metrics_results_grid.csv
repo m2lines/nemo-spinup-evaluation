@@ -1,3 +1,13 @@
+# Metric Evaluation
+# Base Directory: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A
+# Mesh Mask: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/mesh_mask.nc
+# Restart File: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/restart.nc
+# Output Files:
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_2D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_U_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_V_3D.nc
+#
 timestamp,check_density_from_file,temperature_500m_30NS_metric,temperature_BWbox_metric,temperature_DWbox_metric,ACC_Drake_metric,ACC_Drake_metric_2,NASTG_BSF_max,check_density_computed
-0001-07-01 00:00:00,0.000716,4.904489,10.976692,0.000604,57.377180,57.377180,27.704037,0.016145
-0002-07-01 00:00:00,0.000921,4.601656,11.515308,0.001537,68.071458,68.071458,28.284119,0.009057
+0001-07-01 00:00:00,0.000716,11.658720,4.872464,5.510421,57.377180,57.377180,37.378233,0.016145
+0002-07-01 00:00:00,0.000921,11.390039,4.950355,5.451375,68.071458,68.071458,50.268766,0.009057

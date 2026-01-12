@@ -1,3 +1,13 @@
+# Metric Evaluation
+# Base Directory: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A
+# Mesh Mask: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/mesh_mask.nc
+# Restart File: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/restart.nc
+# Output Files:
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_2D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_U_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_V_3D.nc
+#
 metric,mae,rmse
 ACC_Drake_metric,0.000000,0.000000
 ACC_Drake_metric_2,0.000000,0.000000
