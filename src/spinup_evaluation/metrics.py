@@ -122,27 +122,20 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     BD_DEPTH_MIN = 3000  # m : bottom water box lower bound
     LAT_BOUND = 30  # degrees N/S : tropical boundary
 
-    t_BW = temperature.where(
-        1 - (temperature.depth < BD_DEPTH_MIN) * (abs(temperature.nav_lat) < LAT_BOUND)
+    condition = 1 - (temperature.depth < BD_DEPTH_MIN) * (
+        abs(temperature.nav_lat) < LAT_BOUND
     )
 
+    t_BW = temperature.where(condition)
     # Computing Area Weights from Mask over Box
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
     e3t = file_mask.e3t_0.squeeze()
     tmask = file_mask.tmask.squeeze()
-    area_BW = (
-        e1t
-        * e2t
-        * e3t
-        * tmask.where(
-            1
-            - (temperature.depth < BD_DEPTH_MIN)
-            * (abs(temperature.nav_lat) < LAT_BOUND)
-        )
-    )
-    # Returning Average Temperature on Box
-    return (t_BW * area_BW).sum(dim=["y", "x", "depth"]) / area_BW.sum(
+
+    # Return Average Temperature on Box
+    vol_BW = e1t * e2t * e3t * tmask.where(condition)
+    return (t_BW * vol_BW).sum(dim=["y", "x", "depth"]) / vol_BW.sum(
         dim=["y", "x", "depth"]
     )
 
@@ -189,24 +182,17 @@ def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     e2t = file_mask.e2t.squeeze()
     e3t = file_mask.e3t_0.squeeze()
     tmask = file_mask.tmask.squeeze()
-    t_DW = temperature.where(
-        (abs(temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW)
-        * (abs(temperature.nav_lat) < LAT_BOUND)
+
+    condition_HW = (abs(temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW) * (
+        abs(temperature.nav_lat) < LAT_BOUND
     )
 
-    # Computing Area Weights from Mask over Box
-    area_DW = (
-        e1t
-        * e2t
-        * e3t
-        * tmask.where(
-            abs((temperature.depth - DW_DEPTH_MID) < DW_DEPTH_HW)
-            * (abs(temperature.nav_lat) < LAT_BOUND)
-        )
-    )
+    t_DW = temperature.where(condition_HW)
+    # Computing Volume Weights from Mask over box
+    vol_DW = e1t * e2t * e3t * tmask.where(condition_HW)
 
-    # Returning Average Temperature on Box
-    return (t_DW * area_DW).sum(dim=["y", "x", "depth"]) / area_DW.sum(
+    # Returning Average Temperature on box
+    return (t_DW * vol_DW).sum(dim=["y", "x", "depth"]) / vol_DW.sum(
         dim=["y", "x", "depth"]
     )
 
