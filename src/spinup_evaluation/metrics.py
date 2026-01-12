@@ -70,18 +70,20 @@ def temperature_500m_30NS_metric(
     # Computing Area Weights from Mask over 30N-30S latitude zone and @500m depth
     e1t = file_mask.e1t.squeeze()
     e2t = file_mask.e2t.squeeze()
+    e3t = file_mask.e3t_0.squeeze()
     tmask = file_mask.tmask.squeeze()
-    area_500m_30NS = (
+    vol_500m_30NS = (
         e1t
         * e2t
+        * e3t
         * tmask.sel(depth=DEPTH, method="nearest").where(
             abs(temperature.nav_lat) < LAT_BOUND,
             drop=False,
         )
     )
     # Returning Average Temperature at 500m depth as a numpy scalar
-    return (t500_30NS * area_500m_30NS).sum(dim=["y", "x"]) / area_500m_30NS.sum(
-        dim=["y", "x"]
+    return (t500_30NS * vol_500m_30NS).sum(dim=["y", "x", "depth"]) / vol_500m_30NS.sum(
+        dim=["y", "x", "depth"]
     )
 
 
