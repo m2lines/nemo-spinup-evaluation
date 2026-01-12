@@ -1,3 +1,13 @@
+# Metric Evaluation
+# Base Directory: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A
+# Mesh Mask: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/mesh_mask.nc
+# Restart File: /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/restart.nc
+# Output Files:
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_T_2D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_U_3D.nc
+#   - /Users/matt/work/nemo/spinup-evaluation/tests/data/DINO_subsampled_A/grid_V_3D.nc
+#
 timestamp,check_density_from_file,temperature_500m_30NS_metric,temperature_BWbox_metric,temperature_DWbox_metric,ACC_Drake_metric,ACC_Drake_metric_2,NASTG_BSF_max,check_density_computed,ref_check_density_from_file,ref_temperature_500m_30NS_metric,ref_temperature_BWbox_metric,ref_temperature_DWbox_metric,ref_ACC_Drake_metric,ref_ACC_Drake_metric_2,ref_NASTG_BSF_max,ref_check_density_computed,diff_check_density_from_file,diff_temperature_500m_30NS_metric,diff_temperature_BWbox_metric,diff_temperature_DWbox_metric,diff_ACC_Drake_metric,diff_ACC_Drake_metric_2,diff_NASTG_BSF_max,diff_check_density_computed
-0001-07-01 00:00:00,0.000716,4.904489,10.976692,0.000604,57.377180,57.377180,27.704037,0.016145,0.000648,4.466749,11.761104,0.002354,74.813727,74.813727,28.100588,0.008981,0.000068,0.437740,-0.784411,-0.001750,-17.436547,-17.436547,-0.396551,0.007164
-0002-07-01 00:00:00,0.000921,4.601656,11.515308,0.001537,68.071458,68.071458,28.284119,0.009057,0.000554,4.385214,11.906334,0.003018,81.037363,81.037363,27.520212,0.009328,0.000367,0.216442,-0.391025,-0.001481,-12.965905,-12.965905,0.763908,-0.000270
+0001-07-01 00:00:00,0.000716,11.658720,4.872464,5.510421,57.377180,57.377180,37.378233,0.016145,0.000648,11.211256,4.996923,5.415173,74.813727,74.813727,53.990269,0.008981,0.000068,0.447465,-0.124459,0.095247,-17.436547,-17.436547,-16.612036,0.007164
+0002-07-01 00:00:00,0.000921,11.390039,4.950355,5.451375,68.071458,68.071458,50.268766,0.009057,0.000554,11.105895,5.032310,5.389295,81.037363,81.037363,53.633787,0.009328,0.000367,0.284144,-0.081956,0.062081,-12.965905,-12.965905,-3.365021,-0.000270
