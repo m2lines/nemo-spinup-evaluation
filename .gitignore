@@ -12,4 +12,11 @@ __pycache__/
 *.py[cod]
 *.pyo
 
+# Ignore test data except for reference result files
+tests/data/*
+!tests/data/results
+
+# Tools
 .vscode
+.idea
+.zed
