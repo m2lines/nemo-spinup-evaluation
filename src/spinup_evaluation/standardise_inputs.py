@@ -1,5 +1,11 @@
 """Lookup table for mapping standard variables with different variants."""
 
+# TODO: This standardisation needs to be rethought. A better approach would  to
+# explicitly map variables in configuration files. This is safer, more
+# transparent and more flexible than trying to guess based on variable names. The
+# current approach is error-prone and can lead to silent errors if the wrong
+# variable is renamed to the standard name. See issue [#78].
+
 import xarray as xr
 
 VARIABLE_ALIASES = {
@@ -29,8 +35,6 @@ VARIABLE_ALIASES = {
         "depthu",
         "depthv",
     ],  # Depth can be 'depth', 'nav_lev', or 'deptht'
-    # "nav_lat": ["nav_lat", "y", "lat"],  # Latitude can be 'nav_lat' or 'y'
-    # "nav_lon": ["nav_lon", "x", "lon"],  # Longitude can be 'nav_lon' or 'x'
     "ssh": ["sshn", "ssh"],  # Sea surface height could be 'sshn' or 'ssh'
     "time_counter": [
         "time_counter",
@@ -70,13 +74,13 @@ def standardise(dataset, variable_dict):
 
     ds = ds.rename(rename_map)
 
-    # if "x" in ds.dims:
-    #     ds = ds.rename({"x": "nav_lon"})
-    # if "y" in ds.dims:
-    #     ds = ds.rename({"y": "nav_lat"})
-
     # Promote nav_lat and nav_lon to coordinates if they are not already
-    # Error is exhibited in DINO restart file
+    # Error is exhibited when the are left as data variables, and x and y
+    # are renamed to nav_lon and nav_lat respectively, but these are not
+    # coordinates. This is because the code expects to be able to index using
+    # .sel(nav_lat=..., nav_lon=...) which only works if they are coordinates.
+    # see PR [#76](https://github.com/m2lines/nemo-spinup-evaluation/pull/76
+    # for more details.)
     for name in ("nav_lat", "nav_lon"):
         if name in ds and name not in ds.coords:
             ds = ds.set_coords(name)  # zero-copy promotion to coordinate
