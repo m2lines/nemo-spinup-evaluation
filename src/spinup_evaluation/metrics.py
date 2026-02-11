@@ -340,7 +340,7 @@ def NASTG_BSF_max(
     ) / 1e6  # Integrating from the West, and converting from m³/s to Sv
     # Selecting 0N-40N window where to search for the maximum, which will correspond to
     # the center of rotation for the gyre
-    BSF_NASPG = BSF.where(abs(vo.nav_lat - 20) < 20)  # noqa: PLR2004
+    BSF_NASPG = BSF.where(abs(BSF.nav_lat - 20) < 20)  # noqa: PLR2004
 
     # Selecting the maximum value of the BSF in the selected window
     # and return it as a numpy scalar
