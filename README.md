@@ -4,7 +4,7 @@
 
 Spinup-Evaluation provides a command-line tool and Python API for benchmarking the spin-up and restart performance of NEMO/DINO ocean models and machine learning emulators. It supports both single-run and comparison (reference) evaluation, and outputs detailed metrics and difference statistics.
 
-📖 Full documentation is available on [ReadTheDocs](https://nemo-spinup-evaluation.readthedocs.io/en/latest/).
+<!-- 📖 Full documentation is available on [ReadTheDocs](https://nemo-spinup-evaluation.readthedocs.io/en/latest/). -->
 
 
 ## Features
@@ -18,7 +18,7 @@ Spinup-Evaluation provides a command-line tool and Python API for benchmarking t
 
 
 
-## Evaluation Flow
+<!-- ## Evaluation Flow
 
 Spinup-Evaluation is designed to assess the quality and stability of ocean model spin-up and restart states, as well as time-averaged outputs. The evaluation workflow is flexible: you can analyse a single simulation, or compare a simulation against a reference (e.g., a previous spin-up, a control run, or a forecast). The tool supports both instantaneous (restart) and time-averaged (output) evaluation modes.
 
@@ -29,7 +29,7 @@ Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m
 <p align="center">
 <img src="diagram.png" alt="NEMO flow" width="500"/>
 <figcaption>Fig 1. Evaluation flow diagram illustrating the coupling to spinup-forecast, but spinup-evaluation can in theory be used to evaluate any ocean model, be it ML data driven, numerical or otherwise. </figcaption>
-</p>
+</p> -->
 
 ## Repository Layout
 
@@ -53,7 +53,7 @@ Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m
 └── results/                        # Default output directory for metrics CSVs
 ```
 
-## Command-Line Usage
+<!-- ## Command-Line Usage
 
 The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
 
@@ -142,9 +142,9 @@ output_variables:
   ssh: grid_T_2D.nc
   velocity_u: grid_U_3D.nc
   velocity_v: grid_V_3D.nc
-```
+``` -->
 
-## Output Files
+<!-- ## Output Files
 
 - Results are written as CSV files in the results directory, e.g.:
   - `results/metrics_results_restart.csv`
@@ -165,7 +165,7 @@ To run all tests:
 
 ```sh
 pytest tests/
-```
+``` -->
 
 ## Development & Installation
 
@@ -180,9 +180,9 @@ pip install -e .[dev]
 pre-commit install
 ```
 
-## Adding New Metrics
+<!-- ## Adding New Metrics
 
-Add new metric functions to `src/spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed.
+Add new metric functions to `src/spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed. -->
 
 ## Acknowledgements
 

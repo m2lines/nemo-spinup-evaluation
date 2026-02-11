@@ -36,7 +36,12 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov",
     "mypy",
-    "pre-commit",
+    "pre-commit"
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "myst-parser"
 ]
 
 [project.urls]
