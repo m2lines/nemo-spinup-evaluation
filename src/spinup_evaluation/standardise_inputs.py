@@ -74,13 +74,11 @@ def standardise(dataset, variable_dict):
 
     ds = ds.rename(rename_map)
 
-    # Promote nav_lat and nav_lon to coordinates if they are not already
-    # Error is exhibited when the are left as data variables, and x and y
-    # are renamed to nav_lon and nav_lat respectively, but these are not
-    # coordinates. This is because the code expects to be able to index using
-    # .sel(nav_lat=..., nav_lon=...) which only works if they are coordinates.
-    # see PR [#76](https://github.com/m2lines/nemo-spinup-evaluation/pull/76
-    # for more details.)
+    # Promote nav_lat and nav_lon to coordinates to enable .sel() indexing.
+    # Previously, they were not inherited by dataarray subsets, causing thresholding
+    # to use integer indices instead of degrees.
+    # See PR [#76](https://github.com/m2lines/nemo-spinup-evaluation/pull/76
+    # for more details.
     for name in ("nav_lat", "nav_lon"):
         if name in ds and name not in ds.coords:
             ds = ds.set_coords(name)  # zero-copy promotion to coordinate
