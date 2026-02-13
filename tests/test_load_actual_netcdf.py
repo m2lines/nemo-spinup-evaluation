@@ -10,6 +10,10 @@ def test_actual_load():
     test_file = os.path.join(
         os.path.dirname(__file__), "data/DINO_subsampled_A/", "grid_T_2D.nc"
     )
+    assert os.path.isfile(test_file), (
+        "Missing test data. Run script: ./tests/get-data.sh"
+    )
+
     data = xr.open_dataset(test_file)
     assert data is not None
     assert "ssh" in data.variables

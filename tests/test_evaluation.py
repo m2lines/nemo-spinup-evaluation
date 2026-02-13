@@ -81,6 +81,10 @@ def assert_csv_equal(path_a: str, path_b: str, float_tol: float = 1e-12) -> None
 
 @pytest.mark.parametrize("run", ["no_ref", "with_ref", "self_diff"])
 def test_integration_with_real_data(real_input_dir, output_file_path, run):
+    assert real_input_dir.exists() and any(real_input_dir.iterdir()), (
+        f"Missing test data ({real_input_dir}). Run script: ./tests/get-data.sh"
+    )
+
     args = [
         "--sim-path",
         str(real_input_dir),
