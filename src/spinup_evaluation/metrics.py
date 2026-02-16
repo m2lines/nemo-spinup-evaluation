@@ -17,7 +17,7 @@ def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     ----------
     density : xarray.DataArray
         A 4D DataArray with dimensions including 'time_counter', 'depth',
-        'nav_lat', and 'nav_lon'. Represents the density field over time and space.
+        'y', and 'x'. Represents the density field over time and space.
     epsilon : float, optional
         A small threshold used to determine significant non-monotonicity.
         Default is 1e-5.
@@ -25,9 +25,9 @@ def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
     Returns
     -------
     xarray.DataArray
-        1D DataArray (over time_counter), with the proportion of grid points (per
-        time step) where density increases with depth beyond the epsilon threshold.
-        Length is 1 if only a single time step is present.
+        1D DataArray (over time_counter), with values in [0,1], representing
+        the proportion of grid points per time step where density increases
+        with depth beyond the epsilon threshold.
     """
     density = density.where(density != 0)
     diff = density - density.shift(depth=-1)
@@ -42,22 +42,21 @@ def temperature_500m_30NS_metric(
     """
     Metric Extraction Function.
 
-    Compute the average Temperature at 500m depth between 30N and 30S. Unit : °C.
+    Compute the average Temperature at 500m depth between 30N and 30S. Unit: °C.
 
     Parameters
     ----------
     temperature : xarray.DataArray
-        Temperature data (t, depth, lat, lon) with temperature value for each point of
-        the grid.
+        Temperature data with dimensions (time_counter, depth, y, x) and 2D spatial
+        coordinates (nav_lat, nav_lon).
     file_mask   : xarray.Dataset
-        Dataset containing the grid mask variables (e1t, e2t, tmask).
+        Dataset containing the grid mask variables (e1t, e2t, e3t_0, tmask).
 
     Returns
     -------
     xarray.DataArray
         1D DataArray (over time_counter), representing the area-weighted mean
-        temperature at 500m between 30N and 30S. Length is 1 if only a single time step
-        is present.
+        temperature at 500m between 30N and 30S.
     """
     # Taking Temperature At 500m depth and between 30N and 30S.
     DEPTH = 500  # m : upper bound for deep water box
@@ -104,22 +103,21 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     S        30S           Eq.          30N        N
 
     Figure : Schematic Representation of the Bottom Water box used in this metric.
-    Unit : °C
+    Unit: °C
 
     Parameters
     ----------
     temperature    : xarray.DataArray
-        Temperature data (t, depth, lat, lon) with temperature value for each point of
-        the grid.
+        Temperature data with dimensions (time_counter, depth, y, x) and 2D spatial
+        coordinates (nav_lat, nav_lon).
     file_mask : xarray.Dataset
-        Dataset containing the grid mask variables (e1t, e2t, tmask).
+        Dataset containing the grid mask variables (e1t, e2t, e3t_0, tmask).
 
     Returns
     -------
     xarray.DataArray
         1D DataArray (over time_counter), representing the area-weighted mean
-        temperature in the Bottom Water box. Length is 1 if only a single time step
-        is present.
+        temperature in the Bottom Water box.
     """
     BD_DEPTH_MIN = 3000  # m : bottom water box lower bound
     LAT_BOUND = 30  # degrees N/S : tropical boundary
@@ -159,22 +157,21 @@ def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     S        30S           Eq.          30N        N
 
     Figure : Schematic Representation of the Deep Water box used in this metric.
-    Unit : °C
+    Unit: °C
 
     Parameters
     ----------
     temperature    : xarray.DataArray
-        Temperature data (t, depth, lat, lon) with temperature value for each point of
-        the grid.
+        Temperature data with dimensions (time_counter, depth, y, x) and 2D spatial
+        coordinates (nav_lat, nav_lon).
     file_mask : xarray.Dataset
-        Dataset containing the grid mask variables (e1t, e2t, tmask).
+        Dataset containing the grid mask variables (e1t, e2t, e3t_0, tmask).
 
     Returns
     -------
     xarray.DataArray
         1D DataArray (over time_counter), representing the area-weighted mean
-        temperature in the Deep Water box. Length is 1 if only a single time step
-        is present.
+        temperature in the Deep Water box.
     """
     DW_DEPTH_MID = 1750  # m : deep water mid depth
     DW_DEPTH_HW = 1250  # m : half-width around mid depth
@@ -205,25 +202,24 @@ def ACC_Drake_metric(uo, file_mask):
 
     Antarctic Circumpolar Current Transport at the DINO equivalent of the Drake Passage
     at (x=0).
-    Unit : Sv
 
-    Version 1 of ACC metric : Computes the flux assuming rigid lid (as if ssh didn't
-    change
+    Version 1 of ACC metric: Computes the flux assuming rigid lid (no sea surface height
+    variations), thus using the original e3u_0 variable from the mask.
+    Unit: Sv
 
     Parameters
     ----------
     uo        : xarray.DataArray
-        Zonal velocity data (t, depth, lat, lon) with zonal velocity value for each
-        point.
-
+        Zonal velocity data for each point with dimension (t, depth, y, x)
+        and 2D spatial coordinates (nav_lat, nav_lon).
     file_mask : xarray.Dataset
-        Dataset containing the grid mask variables (e1t, e2t, tmask).
+        Dataset containing the grid mask variables (e2u, e3u_0, umask).
 
     Returns
     -------
     xarray.DataArray
         1D DataArray (over time_counter), representing the total transport across Drake
-        Passage (in Sv). Length is 1 if only a single time step is present.
+        Passage (in Sv).
     """
     umask_Drake = file_mask.umask.isel(x=0).squeeze()
     e3u = file_mask.e3u_0.squeeze()
@@ -239,7 +235,7 @@ def ACC_Drake_metric(uo, file_mask):
 
     ubar = u_masked * e3u_masked
     flux = (e2u_masked * ubar).sum(dim=["y", "depth"])
-    # Returning Total Transport across Drake passage as a numpy scalar (unit : Sv)
+    # Returning Total Transport across Drake passage as a numpy scalar (unit: Sv)
     return flux / 1e6
 
 
@@ -251,27 +247,26 @@ def ACC_Drake_metric_2(
 
     Antarctic Circumpolar Current Transport at the DINO equivalent of the Drake Passage
     at (x=0).
-    Version 2 of ACC metric : Computes the flux assuming varying ssh, thus needing to
+    Version 2 of ACC metric: Computes the flux assuming varying ssh, thus needing to
     recompute e3u variable from e3u_0.
 
-    Unit : Sv
+    Unit: Sv
 
     Parameters
     ----------
     uo        : xarray.DataArray
-        Zonal velocity data (t, depth, lat, lon) with zonal velocity value for each
-        point.
+        Zonal velocity data with dimension (t, depth, y, x) and spatial coordinates
+        (nav_lat, nav_lon). Zonal velocity value for each point.
     ssh       : xarray.DataArray
-        Sea Surface Height data (t, lat, lon) with sea surface height value for each
-        point.
+        Sea Surface Height data (t, y, x) and spatial coordinates (nav_lat, nav_lon).
     file_mask : xarray.Dataset
-        Dataset containing the grid mask variables (e1t, e2t, tmask).
+        Dataset containing the grid mask variables (e2u, e3u_0, umask).
 
     Returns
     -------
     xarray.DataArray
         1D DataArray (over time_counter), representing the total transport across Drake
-        Passage (in Sv). Length is 1 if only a single time step is present.
+        Passage (in Sv).
     """
     umask_Drake = file_mask.umask.isel(x=0).squeeze()
     e3u_0 = file_mask.e3u_0.squeeze()
@@ -289,7 +284,7 @@ def ACC_Drake_metric_2(
     # Multiplying zonal velocity by the sectional areas (e2u*e3u)
     ubar = u_masked * e3u_masked
     flux = (e2u_masked * ubar).sum(dim=["y", "depth"])
-    # Return Total Transport across Drake passage as a numpy scalar (unit : Sv)
+    # Return Total Transport across Drake passage as a numpy scalar (unit: Sv)
     return flux / 1e6
 
 
@@ -301,16 +296,16 @@ def NASTG_BSF_max(
 
     Intensity of the North-Atlantic SubTropical Gyre (NASTG) containing the Gulf-Stream
     current computed from the local maximum of the Barotropic Stream Function (BSF)
-    Unit : Sv
+    Unit: Sv
 
     Parameters
     ----------
     vo        : xarray.DataArray
-        Meridional velocity data (t, depth, lat, lon) with meridional velocity value
-        for each point.
+        Meridional velocity data with dimension (t, depth, y, x) and coordinate
+        (nav_lat, nav_lon). Meridional velocity value for each point.
     ssh       : xarray.DataArray
-        Sea Surface Height data (t, lat, lon) with sea surface height value for each
-        point.
+        Sea Surface Height data with dimensions (t, y, x) and spatial coordinates
+        (nav_lat, nav_lon).
     file_mask : xarray.Dataset
         Dataset containing the grid mask variables (e1v, e2v, vmask).
 
@@ -318,8 +313,7 @@ def NASTG_BSF_max(
     -------
     xarray.DataArray
         1D DataArray (over time_counter), representing the maximum Barotropic Stream
-        Function in the NASTG region (in Sv). Length is 1 if only a single time step
-        is present.
+        Function in the NASTG region (in Sv).
     """
     e3v_0 = file_mask.e3v_0.squeeze()
     e1v = file_mask.e1v.squeeze()
