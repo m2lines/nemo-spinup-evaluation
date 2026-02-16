@@ -6,7 +6,7 @@
 import xarray
 
 
-def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
+def check_density(density: xarray.DataArray, epsilon: float = 1e-5) -> xarray.DataArray:
     """
     Check density monotonicity violations in ocean data.
 
@@ -38,7 +38,7 @@ def check_density(density: xarray.DataArray, epsilon: float = 1e-5):
 
 def temperature_500m_30NS_metric(
     temperature: xarray.DataArray, file_mask: xarray.Dataset
-):
+) -> xarray.DataArray:
     """
     Metric Extraction Function.
 
@@ -86,7 +86,9 @@ def temperature_500m_30NS_metric(
     )
 
 
-def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Dataset):
+def temperature_BWbox_metric(
+    temperature: xarray.DataArray, file_mask: xarray.Dataset
+) -> xarray.DataArray:
     """
     Metric Extraction in a "Bottom Water" box.
 
@@ -140,7 +142,9 @@ def temperature_BWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     )
 
 
-def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Dataset):
+def temperature_DWbox_metric(
+    temperature: xarray.DataArray, file_mask: xarray.Dataset
+) -> xarray.DataArray:
     """
     Metric Extraction in a "Deep Water" box.
 
@@ -196,7 +200,9 @@ def temperature_DWbox_metric(temperature: xarray.DataArray, file_mask: xarray.Da
     )
 
 
-def ACC_Drake_metric(uo, file_mask):
+def ACC_Drake_metric(
+    uo: xarray.DataArray, file_mask: xarray.Dataset
+) -> xarray.DataArray:
     """
     Metric Extraction in the Drake Passage.
 
@@ -241,7 +247,7 @@ def ACC_Drake_metric(uo, file_mask):
 
 def ACC_Drake_metric_2(
     uo: xarray.DataArray, ssh: xarray.DataArray, file_mask: xarray.Dataset
-):
+) -> xarray.DataArray:
     """
     Metric Extraction of the Drake Passage.
 
@@ -290,7 +296,7 @@ def ACC_Drake_metric_2(
 
 def NASTG_BSF_max(
     vo: xarray.DataArray, ssh: xarray.DataArray, file_mask: xarray.Dataset
-):
+) -> xarray.DataArray:
     """
     Metric Extraction of the North-Atlantic SubTropical Gyre (NASTG).
 
