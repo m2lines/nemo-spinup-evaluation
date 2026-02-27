@@ -211,8 +211,8 @@ def test_load_grid_variables_rich_format(test_data_path):
     """Test loading grid variables using rich format (variable: {file: .., var: ..})."""
 
     # Rich format - explicit file and variable names
-    # Note that custom names for temperature and ssh
-    # will currently fail time donor allocation
+    # Custom names are used to test that the given
+    # variables are used instead of key substitutions
     rich_specs = {
         "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
         "custom_salinity": {"file": "grid_T_3D.nc", "var": "soce"},
