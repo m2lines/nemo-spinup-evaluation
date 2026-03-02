@@ -24,7 +24,8 @@ pip install -e .[dev]
 
 ### Testing
 ```bash
-# Download test data (required before first run)
+# Download test data (required before first run) - this will output two directories
+# in ./tests/data/DINO_subsampled_A and ./tests/data/DINO_subsampled_B
 bash tests/get-data.sh
 
 # Run all tests
@@ -37,12 +38,12 @@ python -m pytest tests/test_evaluation.py
 ### Evaluation
 ```bash
 # Run main evaluation (--sim-path and/or --ref-sim-path are required)
-spinup-eval --config configs/DINO-setup.yaml --sim-path /path/to/simulation
-spinup-eval --config configs/DINO-setup.yaml --sim-path /path/to/simulation --ref-sim-path /path/to/reference
+spinup-eval --config configs/DINO-setup.yaml --sim-path ./tests/data/DINO_subsampled_A
+spinup-eval --config configs/DINO-setup.yaml --sim-path ./tests/data/DINO_subsampled_A --ref-sim-path ./tests/data/DINO_subsampled_B
 
 # Equivalent forms
-python -m spinup_evaluation --config configs/DINO-setup.yaml --sim-path /path/to/simulation
-python -m spinup_evaluation.cli --config configs/DINO-setup.yaml --sim-path /path/to/simulation
+python -m spinup_evaluation --config configs/DINO-setup.yaml --sim-path ./tests/data/DINO_subsampled_A
+python -m spinup_evaluation.cli --config configs/DINO-setup.yaml --sim-path ./tests/data/DINO_subsampled_A
 ```
 
 ### CLI Options
