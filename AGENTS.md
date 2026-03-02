@@ -1,7 +1,7 @@
 # AGENTS.md for NEMO Spinup Evaluation
 
 ## Project Overview
-Evaluates NEMO ocean model spinup simulations by comparing generated states with reference data using various metrics.
+Provides a CLI and Python API for benchmarking the spinup and restart performance of NEMO/DINO ocean models and machine learning emulators. Supports both single-run evaluation and optional comparison against a reference simulation, outputting metrics and difference statistics.
 
 ## Development Environment
 
@@ -11,8 +11,8 @@ Evaluates NEMO ocean model spinup simulations by comparing generated states with
 python -m venv .venv
 source .venv/bin/activate
 
-# Install package
-pip install -e .
+# Install package with dev dependencies
+pip install -e .[dev]
 ```
 
 ### Key Project Directories
@@ -24,6 +24,9 @@ pip install -e .
 
 ### Testing
 ```bash
+# Download test data (required before first run)
+bash tests/get-data.sh
+
 # Run all tests
 python -m pytest tests/
 
@@ -33,21 +36,19 @@ python -m pytest tests/test_evaluation.py
 
 ### Evaluation
 ```bash
-# Run main evaluation
-python -m spinup_evaluation.cli --config configs/DINO-setup.yaml
+# Run main evaluation (--sim-path and/or --ref-sim-path are required)
+spinup-eval --config configs/DINO-setup.yaml --sim-path /path/to/simulation
+spinup-eval --config configs/DINO-setup.yaml --sim-path /path/to/simulation --ref-sim-path /path/to/reference
 
-# Generate metrics
-python -m spinup_evaluation.metrics --input ./data/ --output ./results/
+# Equivalent forms
+python -m spinup_evaluation --config configs/DINO-setup.yaml --sim-path /path/to/simulation
+python -m spinup_evaluation.cli --config configs/DINO-setup.yaml --sim-path /path/to/simulation
 ```
 
-### Data Processing
-```bash
-# Standardize inputs
-python -m spinup_evaluation.standardise_inputs --config configs/gen-setup.yaml
-
-# Load data
-python -m spinup_evaluation.loader --path ./data/ --output ./processed/
-```
+### CLI Options
+- `--mode`: `output`, `restart`, or `both` (default: `both`) — controls which file types are processed
+- `--results-dir`: directory for CSV output (default: `results/`)
+- `--result-file-prefix`: prefix for output CSV filenames (default: `metrics_results`)
 
 ## Project Structure
 
@@ -58,10 +59,12 @@ python -m spinup_evaluation.loader --path ./data/ --output ./processed/
 ├── src/
 │   └── spinup_evaluation/
 │       ├── __init__.py          # Package entry
+│       ├── __main__.py          # Module entry point (python -m spinup_evaluation)
 │       ├── cli.py               # CLI interface
 │       ├── metrics.py           # Metric calculations
 │       ├── loader.py            # Data loading
 │       ├── metrics_io.py        # Metrics I/O
+│       ├── standardise_inputs.py # Variable alias lookup and standardisation
 │       └── utils.py             # Utilities
 ├── tests/
 │   ├── test_evaluation.py      # Main tests
@@ -143,7 +146,7 @@ git commit -m "<type>(<scope>): <description>"
 ```
 
 ### PRs
-- Target `dev` for features, `main` for bugfixes
+- Target `main` for all changes
 - Include tests for new functionality
 - PR title: `[<component>] <description>`
 
@@ -170,8 +173,8 @@ git commit -m "<type>(<scope>): <description>"
 
 ### GitHub Actions
 - Workflow file: `.github/workflows/ci-eval.yml`
-- Runs on push to `main` and `dev` branches
-- Includes: linting, testing, and build steps
+- Runs on push to `main` branch and on pull requests targeting `main`
+- Includes: linting and testing steps
 
 ### Pipeline Steps
 ```bash
@@ -187,7 +190,6 @@ python -m pytest tests/
 - All pre-commit hooks must pass
 - All tests must pass
 - No linting errors allowed
-- 100% line coverage for new features
 
 ## Debugging
 
