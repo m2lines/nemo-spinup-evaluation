@@ -28,7 +28,8 @@ def test_load_dino_data_invalid_mode(test_data_path, dino_setup):
         load_dino_data("invalid_mode", test_data_path, dino_setup)
 
 
-def test_load_dino_data_missing_mesh_mask(test_data_path):
+@pytest.mark.parametrize("mode", ["restart", "output", "both"])
+def test_load_dino_data_missing_mesh_mask(test_data_path, mode):
     """Test error handling when mesh_mask is missing from setup."""
 
     # Setup without mesh_mask
@@ -38,10 +39,11 @@ def test_load_dino_data_missing_mesh_mask(test_data_path):
     }
 
     with pytest.raises(ValueError, match=r"mesh_mask"):
-        load_dino_data("restart", test_data_path, bad_setup)
+        load_dino_data(mode, test_data_path, bad_setup)
 
 
-def test_load_dino_data_missing_restart_file(test_data_path):
+@pytest.mark.parametrize("mode", ["restart", "output", "both"])
+def test_load_dino_data_missing_restart_file(test_data_path, mode):
     """Test error handling when restart file is missing."""
 
     # Setup with non-existent restart file
@@ -52,16 +54,11 @@ def test_load_dino_data_missing_restart_file(test_data_path):
     }
 
     with pytest.raises(FileNotFoundError, match=r"restart file"):
-        load_dino_data("restart", test_data_path, bad_setup)
-
-    with pytest.raises(FileNotFoundError, match=r"restart file"):
-        load_dino_data("output", test_data_path, bad_setup)
-
-    with pytest.raises(FileNotFoundError, match=r"restart file"):
-        load_dino_data("both", test_data_path, bad_setup)
+        load_dino_data(mode, test_data_path, bad_setup)
 
 
-def test_load_dino_data_missing_output_file(test_data_path):
+@pytest.mark.parametrize("mode", ["output", "both"])
+def test_load_dino_data_missing_output_file(test_data_path, mode):
     """Test error handling when output file is missing."""
 
     # Setup with non-existent output file
@@ -72,16 +69,17 @@ def test_load_dino_data_missing_output_file(test_data_path):
     }
 
     with pytest.raises(FileNotFoundError, match=r"missing.nc"):
-        load_dino_data("output", test_data_path, bad_setup)
+        load_dino_data(mode, test_data_path, bad_setup)
 
 
-def test_load_dino_data_restart_mode(test_data_path, dino_setup):
-    """Test loading data in restart mode."""
+@pytest.mark.parametrize("mode", ["restart", "output", "both"])
+def test_load_dino_data_modes(test_data_path, dino_setup, mode):
+    """Test loading DINO data in each mode."""
 
     # Load data in restart mode
-    data = load_dino_data("restart", test_data_path, dino_setup)
+    data = load_dino_data(mode, test_data_path, dino_setup)
 
-    # Verify the structure
+    # Verify structure
     assert "mesh_mask" in data
     assert "restart" in data
     assert "grid" in data
@@ -95,88 +93,27 @@ def test_load_dino_data_restart_mode(test_data_path, dino_setup):
     # Verify restart loaded
     assert isinstance(data["restart"], xr.Dataset)
 
-    # Verify grid is empty in restart mode
-    assert not data["grid"]
-
-    # Verify paths
-    assert isinstance(data["paths"], dict)
-    assert "base" in data["paths"]
-    assert "mesh_mask" in data["paths"]
-    assert "restart" in data["paths"]
-
-
-def test_load_dino_data_output_mode(test_data_path, dino_setup):
-    """Test loading data in output mode."""
-
-    # Load data in output mode
-    data = load_dino_data("output", test_data_path, dino_setup)
-
-    # Verify the structure
-    assert "mesh_mask" in data
-    assert "restart" in data
-    assert "grid" in data
-    assert "files" in data
-    assert "paths" in data
-
-    # Verify mesh_mask loaded
-    assert isinstance(data["mesh_mask"], xr.Dataset)
-
-    # Verify restart loaded
-    assert isinstance(data["restart"], xr.Dataset)
-
     # Verify grid variables
-    assert isinstance(data["grid"], dict)
-    assert isinstance(data["grid"]["temperature"], xr.DataArray)
-    assert isinstance(data["grid"]["salinity"], xr.DataArray)
-    assert isinstance(data["grid"]["density"], xr.DataArray)
-    assert isinstance(data["grid"]["ssh"], xr.DataArray)
-    assert isinstance(data["grid"]["velocity_u"], xr.DataArray)
-    assert isinstance(data["grid"]["velocity_v"], xr.DataArray)
+    if mode == "restart":
+        assert not data["grid"]
+    else:
+        assert isinstance(data["grid"], dict)
+        assert isinstance(data["grid"]["temperature"], xr.DataArray)
+        assert isinstance(data["grid"]["salinity"], xr.DataArray)
+        assert isinstance(data["grid"]["density"], xr.DataArray)
+        assert isinstance(data["grid"]["ssh"], xr.DataArray)
+        assert isinstance(data["grid"]["velocity_u"], xr.DataArray)
+        assert isinstance(data["grid"]["velocity_v"], xr.DataArray)
 
     # Verify paths
     assert isinstance(data["paths"], dict)
     assert "base" in data["paths"]
     assert "mesh_mask" in data["paths"]
     assert "restart" in data["paths"]
-    assert "output_files" in data["paths"]
-    assert len(data["paths"]["output_files"]) > 0
 
-
-def test_load_dino_data_both_mode(test_data_path, dino_setup):
-    """Test loading data in both mode."""
-
-    # Load data in both mode
-    data = load_dino_data("both", test_data_path, dino_setup)
-
-    # Verify the structure
-    assert "mesh_mask" in data
-    assert "restart" in data
-    assert "grid" in data
-    assert "files" in data
-    assert "paths" in data
-
-    # Verify mesh_mask loaded
-    assert isinstance(data["mesh_mask"], xr.Dataset)
-
-    # Verify restart loaded
-    assert isinstance(data["restart"], xr.Dataset)
-
-    # Verify grid variables
-    assert isinstance(data["grid"], dict)
-    assert isinstance(data["grid"]["temperature"], xr.DataArray)
-    assert isinstance(data["grid"]["salinity"], xr.DataArray)
-    assert isinstance(data["grid"]["density"], xr.DataArray)
-    assert isinstance(data["grid"]["ssh"], xr.DataArray)
-    assert isinstance(data["grid"]["velocity_u"], xr.DataArray)
-    assert isinstance(data["grid"]["velocity_v"], xr.DataArray)
-
-    # Verify paths
-    assert isinstance(data["paths"], dict)
-    assert "base" in data["paths"]
-    assert "mesh_mask" in data["paths"]
-    assert "restart" in data["paths"]
-    assert "output_files" in data["paths"]
-    assert len(data["paths"]["output_files"]) > 0
+    if mode in ["output", "both"]:
+        assert "output_files" in data["paths"]
+        assert len(data["paths"]["output_files"]) > 0
 
 
 def test_load_grid_variables_simple_format(test_data_path):
@@ -211,8 +148,8 @@ def test_load_grid_variables_rich_format(test_data_path):
     """Test loading grid variables using rich format (variable: {file: .., var: ..})."""
 
     # Rich format - explicit file and variable names
-    # Custom names are used to test that the given
-    # variables are used instead of key substitutions
+    # Custom names are used to test that the explicit variable names
+    # are used instead of substitutions based on the key name
     rich_specs = {
         "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
         "custom_salinity": {"file": "grid_T_3D.nc", "var": "soce"},
