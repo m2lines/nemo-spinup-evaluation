@@ -116,6 +116,30 @@ def test_load_dino_data_modes(test_data_path, dino_setup, mode):
         assert len(data["paths"]["output_files"]) > 0
 
 
+@pytest.mark.parametrize("mode", ["restart", "output", "both"])
+def test_load_dino_data_nav_latlon_promotion(test_data_path, dino_setup, mode):
+    """Test that nav_lat and nav_lon are promoted to coordinates."""
+
+    # Load data in output mode
+    data = load_dino_data(mode, test_data_path, dino_setup, do_standardise=True)
+
+    assert isinstance(data["restart"], xr.Dataset)
+    assert isinstance(data["restart"]["temperature"], xr.DataArray)
+
+    # Verify nav_lat and nav_lon are coordinates
+    assert "nav_lat" in data["restart"]["temperature"].coords
+    assert "nav_lon" in data["restart"]["temperature"].coords
+
+    # Check a selection to ensure promoted coords are accessible
+    assert len(data["restart"]["temperature"].nav_lat) == len(data["restart"].y)
+
+    DEGREES = -65.0
+    NUM_BELOW = 806
+    sel = data["restart"]["temperature"].nav_lat < DEGREES
+    num_true = sel.sum()
+    assert num_true == NUM_BELOW
+
+
 def test_load_grid_variables_simple_format(test_data_path):
     """Test loading grid variables using simple format (variable: filename)."""
 
