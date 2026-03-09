@@ -32,6 +32,16 @@ def test_load_dino_data_invalid_mode(test_data_path, dino_setup):
 def test_load_dino_data_missing_mesh_mask(test_data_path, mode):
     """Test error handling when mesh_mask is missing from setup."""
 
+    # Setup with missing mesh_mask file
+    bad_setup = {
+        "mesh_mask": "missing_mesh_mask.nc",
+        "restart_files": "restart.nc",
+        "output_variables": {"temperature": "grid_T_3D.nc"},
+    }
+
+    with pytest.raises(FileNotFoundError, match=r"Mesh mask"):
+        load_dino_data(mode, test_data_path, bad_setup)
+
     # Setup without mesh_mask
     bad_setup = {
         "restart_files": "restart",
