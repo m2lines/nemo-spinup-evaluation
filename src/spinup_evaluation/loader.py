@@ -262,6 +262,10 @@ def load_dino_data(
         }
       }
     """
+    if mode not in ["output", "restart", "both"]:
+        msg = "Mode must be one of 'output', 'restart', 'both'"
+        raise ValueError(msg)
+
     base = os.path.abspath(base)
 
     data: Dict[str, object] = {}
