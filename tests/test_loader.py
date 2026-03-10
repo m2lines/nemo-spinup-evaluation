@@ -9,7 +9,7 @@ from spinup_evaluation.loader import load_dino_data, load_grid_variables
 
 @pytest.fixture
 def dino_setup():
-    """Load the DINO setup configuration."""
+    """Fixture to load the DINO setup configuration."""
     config_path = Path("configs/DINO-setup.yaml")
     with config_path.open("r") as f:
         return yaml.safe_load(f)
@@ -17,12 +17,12 @@ def dino_setup():
 
 @pytest.fixture
 def test_data_path() -> Path:
-    """Path to the test data directory."""
+    """Fixture path to the test data directory."""
     return Path("tests/data/DINO_subsampled_A")
 
 
 def test_load_dino_data_invalid_mode(test_data_path, dino_setup):
-    """Test error handling when an invalid mode is provided."""
+    """Test error handling when an invalid mode option is provided."""
 
     with pytest.raises(ValueError, match=r"'output', 'restart', 'both'"):
         load_dino_data("invalid_mode", test_data_path, dino_setup)
@@ -84,7 +84,7 @@ def test_load_dino_data_missing_output_file(test_data_path, mode):
 
 @pytest.mark.parametrize("mode", ["restart", "output", "both"])
 def test_load_dino_data_modes(test_data_path, dino_setup, mode):
-    """Test loading DINO data in each mode."""
+    """Test full load of DINO data in each mode."""
 
     # Load data in restart mode
     data = load_dino_data(mode, test_data_path, dino_setup)
@@ -206,3 +206,21 @@ def test_load_grid_variables_rich_format(test_data_path):
     assert isinstance(grid_vars["custom_salinity"], xr.DataArray)
     assert isinstance(grid_vars["custom_density"], xr.DataArray)
     assert isinstance(grid_vars["ssh"], xr.DataArray)
+
+
+def test_load_grid_variables_rich_format_missing_var(test_data_path):
+    """
+    Test error handling for non-existent variables when loading grid in rich format.
+    """
+
+    # Rich format - explicit file and variable names, some invalid
+    rich_specs = {
+        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
+        "custom_salinity": {"file": "grid_T_3D.nc", "var": "no_var"},
+        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "ssh": {"file": "grid_T_2D.nc", "var": "no_var"},
+    }
+
+    files_cache = {}
+    with pytest.raises(KeyError, match=r"No variable named"):
+        load_grid_variables(str(test_data_path), rich_specs, files_cache)
