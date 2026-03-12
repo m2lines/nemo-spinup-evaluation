@@ -121,6 +121,32 @@ def _normalise_var_specs(
     return normalised
 
 
+def _check_required_coords(
+    data: xr.DataArray | xr.Dataset, required: tuple[str, ...], name: str
+):
+    """
+    Check for expected coordinates in a dataset.
+
+    Parameters
+    ----------
+    data
+        The dataset to check for required coordinates.
+    required
+        List of required coordinate names.
+    name
+        Dataset name to use in error messages.
+
+    Raises
+    ------
+    KeyError
+        When a specified coordinate is missing.
+    """
+    missing = [coord for coord in required if coord not in data.coords]
+    if missing:
+        msg = f"Required coordinate(s) missing in {name}: {', '.join(missing)}"
+        raise KeyError(msg)
+
+
 def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> Path:
     """Resolve the mesh mask path, handling absolute and relative paths."""
     p = Path(mesh_mask)
@@ -290,6 +316,7 @@ def load_dino_data(
     data["mesh_mask"] = load_mesh_mask(mesh_mask_path)
 
     # restart (optional / controlled by mode)
+    data["restart"] = None
     restart_hint = str(setup.get("restart_files") or "")
     if mode in ("restart", "both"):
         restart_path = get_restart_file_path(base, restart_hint)
@@ -299,7 +326,6 @@ def load_dino_data(
         else:
             paths["restart"] = restart_path
             data["restart"] = xr.open_dataset(restart_path)
-            # data["files"][os.path.relpath(restart_path, base)] = data["restart"]
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
@@ -321,7 +347,6 @@ def load_dino_data(
     # expose the file cache
     data["files"] = files_cache
     data["paths"] = paths
-    # dict_keys(['grid_T_3D.nc', 'grid_T_2D.nc', 'grid_U_3D.nc', 'grid_V_3D.nc'])
 
     # standardise names after loading has taken place
     if do_standardise:
@@ -329,12 +354,22 @@ def load_dino_data(
         data["mesh_mask"] = standardise(data["mesh_mask"], VARIABLE_ALIASES)
 
         # 2) restart if present
-        if data.get("restart") is not None:
+        if data["restart"] is not None:
             data["restart"] = standardise(data["restart"], VARIABLE_ALIASES)
 
         # 3) each requested variable DataArray
         data["grid"] = {
             name: standardise(da, VARIABLE_ALIASES) for name, da in data["grid"].items()
         }
+
+    # Check for expected coordinates after all other processing
+    required_coords = ("time_counter", "depth", "nav_lat", "nav_lon")
+    _check_required_coords(data["mesh_mask"], required_coords, "mesh mask")
+
+    if data["restart"] is not None:
+        _check_required_coords(data["restart"], required_coords, "restart file")
+
+    for name, da in data["grid"].items():
+        _check_required_coords(da, ("time_counter", "nav_lat", "nav_lon"), name)
 
     return data
