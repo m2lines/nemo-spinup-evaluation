@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "spinup-evaluation"
-version = "0.2.1"
+name = "nemo-spinup-evaluation"
+version = "0.3.0"
 description = "Climate model spinup evaluation metrics and diagnostics"
 requires-python = ">=3.9"
 authors = [
@@ -45,11 +45,11 @@ Issues = "https://github.com/m2lines/Spinup-Evaluation/issues"
 Documentation = "https://spinup-evaluation.readthedocs.io"
 
 [project.scripts]
-spinup-eval = "spinup_evaluation.cli:main"
+nemo-spinup-evaluation = "nemo_spinup_evaluation.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["spinup_evaluation*"]
+include = ["nemo_spinup_evaluation*"]
 
 [tool.ruff]
 src = ["src", "tests"]
