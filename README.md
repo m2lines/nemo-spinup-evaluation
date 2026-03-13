@@ -180,10 +180,9 @@ output_variables:
   temperature:
     file: grid_T_3D.nc
     var: toce
-    time_from: density  # (optional) use time axis from another variable
   # ...
 ```
-**Behavior:** You can explicitly specify the file, the variable name within the file, and optionally a `time_from` field to use the time axis from another variable.
+**Behavior:** You can explicitly specify the file and the variable name within the file.
 
 You can mix and match simple and rich forms in the same config. The loader will handle both.
 

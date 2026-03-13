@@ -63,11 +63,10 @@ def _normalise_var_specs(
 
     Accepts either:
       simple form:  {"temperature": "grid_T_3D.nc"}
-      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "toce",
-      "time_from" : "density"}
+      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}}
 
     Returns canonical mapping:
-      {canon: {"file": str, "var": str, "time_from": Optional[str]}}
+      {canon: {"file": str, "var": str}}
 
     The file_cache is used to avoid reopening the same dataset multiple times.
     It is built up as the function processes each variable specification.
@@ -95,7 +94,7 @@ def _normalise_var_specs(
             normalised[canon] = {"file": spec, "var": var_name}
 
         elif isinstance(spec, Mapping):
-            # rich form should include 'file', 'var', and optionally 'time_from'
+            # rich form should include 'file' and 'var'
             # the 'var' corresponds to the variable name in the dataset
             # therefore we don't need to infer it
             if "file" not in spec:
@@ -110,8 +109,6 @@ def _normalise_var_specs(
                 var_name = _infer_var_name(ds, canon)
 
             entry = {"file": fname, "var": var_name}
-            if "time_from" in spec:
-                entry["time_from"] = str(spec["time_from"])
             normalised[canon] = entry
 
         else:
@@ -233,22 +230,6 @@ def load_grid_variables(
     for canon, spec in norm.items():
         ds = _open_cached(files_cache, base, spec["file"])
         out[canon] = ds[spec["var"]]
-
-    # NOTE: temporary hard-coded time donor to avoid label-mismatch  empties; remove
-    # when YAML 'time_from' returns
-
-    recipient = "ssh"
-    donor = "temperature"
-    if donor:
-        if donor not in out:
-            msg = f"time_from donor '{donor}' not found among requested variables."
-            raise KeyError(msg)
-        donor_time = out[donor].coords.get("time_counter", None)
-        if donor_time is None:
-            msg = f"Donor '{donor}' has no 'time_counter' coordinate to copy."
-            raise ValueError(msg)
-
-        out[recipient] = out[recipient].assign_coords(time_counter=donor_time)
 
     return out
 
