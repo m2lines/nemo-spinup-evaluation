@@ -9,6 +9,7 @@ description = "Climate model spinup evaluation metrics and diagnostics"
 requires-python = ">=3.9"
 authors = [
   {name = "Matt Archer", email = "ma595@cam.ac.uk"},
+  {name = "Simon Sadler", email = "ss3272@cam.ac.uk"},
   {name = "Surbhi Goel", email = "sg2147@cam.ac.uk"},
 ]
 readme = "README.md"
