@@ -10,6 +10,25 @@ from spinup_evaluation.loader import (
     load_grid_variables,
 )
 
+"""
+Parameters found in these tests mimic loader.load_dino_data:
+
+Parameters
+----------
+test_data_path : fixture
+    The base directory for loading data files.
+dino_setup : fixture
+    A mapping containing the YAML configuration for data loading.
+mode : parametrize
+    The mode of operation, one of "restart", "output" or "both"
+"""
+
+
+@pytest.fixture
+def test_data_path() -> Path:
+    """Fixture path to the test data directory."""
+    return Path("tests/data/DINO_subsampled_A")
+
 
 @pytest.fixture
 def dino_setup():
@@ -17,12 +36,6 @@ def dino_setup():
     config_path = Path("configs/DINO-setup.yaml")
     with config_path.open("r") as f:
         return yaml.safe_load(f)
-
-
-@pytest.fixture
-def test_data_path() -> Path:
-    """Fixture path to the test data directory."""
-    return Path("tests/data/DINO_subsampled_A")
 
 
 def test_load_dino_data_invalid_mode(test_data_path, dino_setup):
