@@ -4,7 +4,11 @@ import pytest
 import xarray as xr
 import yaml
 
-from spinup_evaluation.loader import load_dino_data, load_grid_variables
+from spinup_evaluation.loader import (
+    _check_required_coords,
+    load_dino_data,
+    load_grid_variables,
+)
 
 
 @pytest.fixture
@@ -224,3 +228,28 @@ def test_load_grid_variables_rich_format_missing_var(test_data_path):
     files_cache = {}
     with pytest.raises(KeyError, match=r"No variable named"):
         load_grid_variables(str(test_data_path), rich_specs, files_cache)
+
+
+def test_check_required_coords():
+    """Test that _check_required_coords validates coordinates."""
+
+    ds = xr.Dataset(
+        {"temperature": (("time_counter", "y", "x"), [[[0.0]]])},
+        coords={
+            "time_counter": [0],
+            "nav_lat": (("y", "x"), [[0.0]]),
+            "nav_lon": (("y", "x"), [[0.0]]),
+        },
+    )
+
+    # Check that coords present are recognised
+    _check_required_coords(ds, ("time_counter", "nav_lat", "nav_lon"), "test_dataset")
+    _check_required_coords(ds, ("nav_lat", "nav_lon"), "test_dataset")
+
+    # Check that missing coords cause a KeyError: for one missing
+    with pytest.raises(KeyError, match=r"missing in test_dataset: depth"):
+        _check_required_coords(ds, ("time_counter", "depth"), "test_dataset")
+
+    # ...and multiple missing
+    with pytest.raises(KeyError, match=r"missing in test_dataset: missing, depth"):
+        _check_required_coords(ds, ("missing", "depth", "time_counter"), "test_dataset")

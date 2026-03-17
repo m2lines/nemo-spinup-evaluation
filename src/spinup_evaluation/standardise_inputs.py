@@ -54,14 +54,15 @@ def standardise(
 
     Parameters
     ----------
-    dataset
+    dataset : xr.DataArray | xr.Dataset
         Input data to be standardised.
-    variable_dict
+    variable_dict : dict
         Mapping of standardised names and their variations for conversion.
 
     Returns
     -------
-    Standardised data, maintaining the same type as the input.
+    xr.DataArray | xr.Dataset
+        Standardised data, maintaining the same type as the input.
     """
     is_da = isinstance(dataset, xr.DataArray)
     if is_da:

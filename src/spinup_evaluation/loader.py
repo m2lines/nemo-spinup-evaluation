@@ -129,11 +129,11 @@ def _check_required_coords(
 
     Parameters
     ----------
-    data
-        The dataset to check for required coordinates.
-    required
+    data : xr.DataArray | xr.Dataset
+       The dataset to check for required coordinates.
+    required : tuple[str, ...]
         List of required coordinate names.
-    name
+    name : str
         Dataset name to use in error messages.
 
     Raises
