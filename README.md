@@ -1,8 +1,8 @@
 [![CI](https://github.com/m2lines/Spinup-Evaluation/actions/workflows/ci-eval.yml/badge.svg)](https://github.com/m2lines/nemo-spinup-evaluation/actions/workflows/ci-eval.yml)[![Documentation Status](https://readthedocs.org/projects/nemo-spinup-evaluation/badge/?version=latest)](https://nemo-spinup-evaluation.readthedocs.io/en/latest/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
-# Spinup-Evaluation
+# NEMO Spinup-Evaluation
 
-Spinup-Evaluation provides a command-line tool and Python API for benchmarking the spin-up and restart performance of NEMO/DINO ocean models and machine learning emulators. It supports both single-run and comparison (reference) evaluation, and outputs detailed metrics and difference statistics.
+NEMO Spinup-Evaluation (`nemo-spinup-evaluation`) provides a command-line tool and Python API for benchmarking the spin-up and restart performance of NEMO/DINO ocean models and machine learning emulators. It supports both single-run and comparison (reference) evaluation, and outputs detailed metrics and difference statistics.
 
 📖 Full documentation is available on [Read the Docs](https://nemo-spinup-evaluation.readthedocs.io/en/latest/).
 
@@ -14,7 +14,7 @@ Spinup-Evaluation provides a command-line tool and Python API for benchmarking t
 - **Comparison Mode**: Computes diffs, MAE, and RMSE between a simulation and a reference.
 - **Modern Output**: Results are written as CSV files (one for restart, one for output).
 - **Test Suite**: Integration and regression tests using real and subsampled NetCDF data.
-- **Extensible**: Add new metrics by editing `src/spinup_evaluation/metrics.py`.
+- **Extensible**: Add new metrics by editing `src/nemo_spinup_evaluation/metrics.py`.
 
 
 ## Installation
@@ -66,15 +66,15 @@ pytest tests/
 
 ## Evaluation Flow
 
-Spinup-Evaluation is designed to assess the quality and stability of ocean model spin-up and restart states, as well as time-averaged outputs. The evaluation workflow is flexible: you can analyse a single simulation, or compare a simulation against a reference (e.g., a previous spin-up, a control run, or a forecast). The tool supports both instantaneous (restart) and time-averaged (output) evaluation modes.
+NEMO Spinup-Evaluation is designed to assess the quality and stability of ocean model spin-up and restart states, as well as time-averaged outputs. The evaluation workflow is flexible: you can analyse a single simulation, or compare a simulation against a reference (e.g., a previous spin-up, a control run, or a forecast). The tool supports both instantaneous (restart) and time-averaged (output) evaluation modes.
 
 The diagram below (Figure 1) illustrates the typical evaluation procedure. Model output files (restart and/or time-averaged NetCDFs) are loaded and standardized according to the YAML config. Metrics are computed, and—if a reference is provided—differences, MAE, and RMSE are calculated.
 
-Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m2lines/nemo-spinup-forecast), which automates the generation of machine learned spin-up states for NEMO/DINO models. Together, these tools provide a robust workflow for accelerating ocean spin-up.
+NEMO Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m2lines/nemo-spinup-forecast), which automates the generation of machine learned spin-up states for NEMO/DINO models. Together, these tools provide a robust workflow for accelerating ocean spin-up.
 
 <p align="center">
 <img src="diagram.png" alt="NEMO flow" width="500"/>
-<figcaption>Fig 1. Evaluation flow diagram illustrating the coupling to spinup-forecast, but spinup-evaluation can in theory be used to evaluate any ocean model, be it ML data driven, numerical or otherwise. </figcaption>
+<figcaption>Fig 1. Evaluation flow diagram illustrating the coupling to spinup-forecast, but nemo-spinup-evaluation can in theory be used to evaluate any ocean model, be it ML data driven, numerical or otherwise. </figcaption>
 </p>
 
 
@@ -87,7 +87,7 @@ Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m
 ├── configs/                        Configuration files for variable/file mapping
 │   └── DINO-setup.yaml             Example YAML config for DINO/NEMO variables
 ├── src/
-│   └── spinup_evaluation/          Main Python package
+│   └── nemo_spinup_evaluation/     Main Python package
 │       ├── cli.py                  Command-line interface (CLI) entry point
 │       ├── loader.py               Data loading and preprocessing utilities
 │       ├── metrics_io.py           Output helpers (CSV writing, formatting)
@@ -102,10 +102,10 @@ Spinup-Evaluation is often used alongside [spinup-forecast](https://github.com/m
 
 ## Command-Line Usage
 
-The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
+The main entry point is `src/nemo_spinup_evaluation/cli.py` (or the installed `nemo-spinup-evaluation` script):
 
 ```sh
-python -m spinup_evaluation.cli \
+python -m nemo_spinup_evaluation.cli \
   --sim-path <simulation_dir>             # Required: path to simulation directory
   [--ref-sim-path <reference_sim_dir>]    # Optional: path to reference simulation
   [--config configs/DINO-setup.yaml]      # Optional: YAML config file (default shown)
@@ -126,7 +126,7 @@ python -m spinup_evaluation.cli \
 
 ## Modes: What Do They Mean?
 
-Spinup-Evaluation supports three modes, controlled by the `--mode` argument:
+NEMO Spinup-Evaluation supports three modes, controlled by the `--mode` argument:
 
 ### `restart` (Instantaneous Output)
 
@@ -212,7 +212,7 @@ A separate file with MAE and RMSE statistics is also generated if a reference di
 
 ## Adding New Metrics
 
-Add new metric functions to `src/spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed.
+Add new metric functions to `src/nemo_spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed.
 
 
 ## Acknowledgements
