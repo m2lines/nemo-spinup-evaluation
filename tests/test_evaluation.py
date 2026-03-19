@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from spinup_evaluation.cli import main
+from nemo_spinup_evaluation.cli import main
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@ import pytest
 import xarray as xr
 import yaml
 
-from spinup_evaluation.loader import (
+from nemo_spinup_evaluation.loader import (
     _check_required_coords,
     load_dino_data,
     load_grid_variables,

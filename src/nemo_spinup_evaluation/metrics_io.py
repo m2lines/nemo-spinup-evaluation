@@ -3,7 +3,7 @@ Provide functions for writing metric results to a CSV file.
 
 Includes handling both time series and static metrics using xarray DataArrays.
 """
-# spinup_evaluation/metrics_io.py
+# nemo_spinup_evaluation/metrics_io.py
 
 from __future__ import annotations
 
