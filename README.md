@@ -1,4 +1,4 @@
-[![CI](https://github.com/m2lines/Spinup-Evaluation/actions/workflows/ci-eval.yml/badge.svg)](https://github.com/m2lines/nemo-spinup-evaluation/actions/workflows/ci-eval.yml)[![Documentation Status](https://readthedocs.org/projects/nemo-spinup-evaluation/badge/?version=latest)](https://nemo-spinup-evaluation.readthedocs.io/en/latest/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/m2lines/nemo-spinup-evaluation/actions/workflows/ci-eval.yml/badge.svg)](https://github.com/m2lines/nemo-spinup-evaluation/actions/workflows/ci-eval.yml)[![Documentation Status](https://readthedocs.org/projects/nemo-spinup-evaluation/badge/?version=latest)](https://nemo-spinup-evaluation.readthedocs.io/en/latest/) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 # NEMO Spinup-Evaluation
 
@@ -19,7 +19,7 @@ NEMO Spinup-Evaluation (`nemo-spinup-evaluation`) provides a command-line tool a
 
 ## Installation
 
-Requires Python ≥ 3.9
+Requires Python ≥ 3.10
 
 1. **Clone the repository**
 
@@ -47,6 +47,39 @@ Requires Python ≥ 3.9
     pip install -e .[dev]
     pre-commit install
 	```
+
+
+## Quick Start
+
+Download the example DINO dataset from Zenodo:
+
+```sh
+# TODO: add Zenodo download link and instructions once dataset is published
+```
+
+Then run the evaluation against the example data:
+
+```sh
+nemo-spinup-evaluation --sim-path <simulation_dir> --config configs/DINO-setup.yaml
+```
+
+Or compare against a reference simulation:
+
+```sh
+nemo-spinup-evaluation --sim-path <simulation_dir> --ref-sim-path <reference_dir> --config configs/DINO-setup.yaml
+```
+
+
+## Command-Line Usage
+
+| Argument               | Description                                                   | Default                   | Required |
+|------------------------|---------------------------------------------------------------|---------------------------|----------|
+| `--sim-path`           | Path to the simulation directory                              |                           | Yes      |
+| `--ref-sim-path`       | Path to a reference simulation directory to enable comparison |                           | No       |
+| `--config`             | Path to the YAML config file                                  | `configs/DINO-setup.yaml` | No       |
+| `--results-dir`        | Directory to save output CSVs                                 | `results`                 | No       |
+| `--result-file-prefix` | Prefix for output files                                       | `metrics_results`         | No       |
+| `--mode`               | Which metric suite(s) to run: `output`, `restart`, or `both`  | `both`                    | No       |
 
 
 ## Tests
@@ -100,31 +133,7 @@ NEMO Spinup-Evaluation is often used alongside [spinup-forecast](https://github.
 ```
 
 
-## Command-Line Usage
-
-The main entry point is `src/nemo_spinup_evaluation/cli.py` (or the installed `nemo-spinup-evaluation` script):
-
-```sh
-python -m nemo_spinup_evaluation.cli \
-  --sim-path <simulation_dir>             # Required: path to simulation directory
-  [--ref-sim-path <reference_sim_dir>]    # Optional: path to reference simulation
-  [--config configs/DINO-setup.yaml]      # Optional: YAML config file (default shown)
-  [--results-dir results]                 # Optional: output directory (default shown)
-  [--result-file-prefix metrics_results]  # Optional: output file prefix (default shown)
-  [--mode output|restart|both]            # Optional: which metric suite(s) to run
-```
-
-| Argument               | Description                                                   | Default                   |
-|------------------------|---------------------------------------------------------------|---------------------------|
-| `--sim-path`           | Path to the simulation directory                              |                           |
-| `--ref-sim-path`       | Path to a reference simulation directory to enable comparison |                           |
-| `--config`             | Path to the YAML config file                                  | `configs/DINO-setup.yaml` |
-| `--results-dir`        | Directory to save output CSVs                                 | `results`                 |
-| `--result-file-prefix` | Prefix for output files                                       | `metrics_results`         |
-| `--mode`               | Which metric suite(s) to run: `output`, `restart`, or `both`  | `both`                    |
-
-
-## Modes: What Do They Mean?
+## Modes
 
 NEMO Spinup-Evaluation supports three modes, controlled by the `--mode` argument:
 
