@@ -46,11 +46,23 @@ VARIABLE_ALIASES = {
 }
 
 
-def standardise(dataset, variable_dict):
+def standardise(
+    dataset: xr.DataArray | xr.Dataset, variable_dict: dict
+) -> xr.DataArray | xr.Dataset:
     """
     Rename variables/coords/dims using aliases.
 
-    Returns the same type as input (DataArray or Dataset).
+    Parameters
+    ----------
+    dataset : xr.DataArray | xr.Dataset
+        Input data to be standardised.
+    variable_dict : dict
+        Mapping of standardised names and their variations for conversion.
+
+    Returns
+    -------
+    xr.DataArray | xr.Dataset
+        Standardised data, maintaining the same type as the input.
     """
     is_da = isinstance(dataset, xr.DataArray)
     if is_da:
