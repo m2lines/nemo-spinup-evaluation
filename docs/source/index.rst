@@ -18,4 +18,4 @@ Spinup-Evaluation documentation
    Command-Line-Interface.md
    New-Metrics.md
    Example.md
-   modules
+   nemo_spinup_evaluation
