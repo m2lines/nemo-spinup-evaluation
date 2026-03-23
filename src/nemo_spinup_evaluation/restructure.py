@@ -13,11 +13,12 @@ output_path = "/home/sg2147/Samudra/rollout/2025-10-28-rollout-om4_samudra/"
 # --- Open dataset ---
 ds = xr.open_dataset(input_path)
 
+
 def combine_levels(ds, base_name, depth_name="deptht"):
     """Combine split variables (e.g., so_0 ... so_18) into one 4D variable."""
     vars_found = sorted(
-        [v for v in ds.data_vars if re.match(fr"{base_name}_\d+", v)],
-        key=lambda x: int(x.split("_")[1])
+        [v for v in ds.data_vars if re.match(rf"{base_name}_\d+", v)],
+        key=lambda x: int(x.split("_")[1]),
     )
     if not vars_found:
         msg = f"No variables found for base name '{base_name}'"
@@ -29,15 +30,13 @@ def combine_levels(ds, base_name, depth_name="deptht"):
     da.name = base_name
     return da
 
+
 # --- Combine so and thetao into 4D arrays ---
 so_4d = combine_levels(ds, "so")
 thetao_4d = combine_levels(ds, "thetao")
 
 # --- Add zos if it exists (2D surface variable) ---
-data_vars = {
-    "so": so_4d,
-    "thetao": thetao_4d
-}
+data_vars = {"so": so_4d, "thetao": thetao_4d}
 
 data_vars["zos"] = ds["zos"]
 

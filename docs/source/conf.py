@@ -2,15 +2,16 @@
 
 import os
 import sys
+from importlib.metadata import version
 
 sys.path.insert(0, os.path.abspath("../../src"))  # assumes your code is in root
 
 # -- Project information -----------------------------------------------------
-project = "Spinup-Evaluation"
+project = "nemo-spinup-evaluation"
 # ruff: noqa: A001
-copyright = "2025, Surbhi Goel, Matt Archer"
-author = "Surbhi Goel, Matt Archer"
-release = "2025"
+copyright = "2026, Matt Archer, Surbhi Goel"
+author = "Matt Archer, Surbhi Goel"
+release = version("nemo-spinup-evaluation")
 
 # -- General configuration ---------------------------------------------------
 extensions = [

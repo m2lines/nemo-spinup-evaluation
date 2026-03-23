@@ -41,7 +41,8 @@ dev = [
 docs = [
     "sphinx",
     "sphinx-rtd-theme",
-    "myst-parser"
+    "myst-parser",
+    "sphinx-autodoc-typehints"
 ]
 
 [project.urls]
