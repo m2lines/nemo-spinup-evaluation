@@ -1,10 +1,8 @@
-Spinup-Evaluation documentation
-===============================
+NEMO Spinup-Evaluation documentation
+=====================================
 
-.. include:: ../../README.md
+.. include:: index.md
    :parser: myst_parser.sphinx_
-
-----
 
 .. toctree::
    :maxdepth: 4
