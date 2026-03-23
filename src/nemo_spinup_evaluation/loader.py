@@ -283,7 +283,8 @@ def load_dino_data(
         - ``grid``: dict mapping canonical name to xr.DataArray
         - ``files``: dict mapping relative path to xr.Dataset
         - ``paths``: dict with keys ``base``, ``mesh_mask``, ``restart``,
-        ``output_files``
+          ``output_files``
+
     """
     if mode not in ["output", "restart", "both"]:
         msg = "Mode must be one of 'output', 'restart', 'both'"
