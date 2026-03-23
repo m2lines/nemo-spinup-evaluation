@@ -19,9 +19,9 @@ import numpy as np
 import xarray as xr
 import yaml
 
-from spinup_evaluation.loader import load_dino_data
-from spinup_evaluation.metrics_io import write_metric_results
-from spinup_evaluation.utils import get_density, get_depth
+from nemo_spinup_evaluation.loader import load_dino_data
+from nemo_spinup_evaluation.metrics_io import write_metric_results
+from nemo_spinup_evaluation.utils import get_density, get_depth
 
 # Metrics: support both package and direct execution
 try:
@@ -35,7 +35,7 @@ try:
         temperature_DWbox_metric,
     )
 except (TypeError, ValueError, KeyError, AttributeError):
-    from spinup_evaluation.metrics import (  # type: ignore
+    from nemo_spinup_evaluation.metrics import (  # type: ignore
         ACC_Drake_metric,
         ACC_Drake_metric_2,
         NASTG_BSF_max,

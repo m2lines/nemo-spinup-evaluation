@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "spinup-evaluation"
-version = "0.2.1"
+name = "nemo-spinup-evaluation"
+version = "0.3.0"
 description = "Climate model spinup evaluation metrics and diagnostics"
 requires-python = ">=3.10"
 authors = [
@@ -18,9 +18,9 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
     "License :: OSI Approved :: MIT License",
 ]
@@ -32,7 +32,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "ruff==0.11.12",
+    "ruff==0.15.6",
     "pytest>=7.0.0",
     "pytest-cov",
     "mypy",
@@ -40,16 +40,16 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/m2lines/Spinup-Evaluation"
-Issues = "https://github.com/m2lines/Spinup-Evaluation/issues"
-Documentation = "https://spinup-evaluation.readthedocs.io"
+Repository = "https://github.com/m2lines/nemo-spinup-evaluation"
+Issues = "https://github.com/m2lines/nemo-spinup-evaluation/issues"
+Documentation = "https://nemo-spinup-evaluation.readthedocs.io"
 
 [project.scripts]
-spinup-eval = "spinup_evaluation.cli:main"
+nemo-spinup-evaluation = "nemo_spinup_evaluation.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["spinup_evaluation*"]
+include = ["nemo_spinup_evaluation*"]
 
 [tool.ruff]
 src = ["src", "tests"]
