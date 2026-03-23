@@ -1,4 +1,4 @@
-## Command-Line Usage
+# Command-Line Usage
 
 The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
 

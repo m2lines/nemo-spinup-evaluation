@@ -36,14 +36,6 @@ nemo\_spinup\_evaluation.metrics\_io module
    :show-inheritance:
    :undoc-members:
 
-nemo\_spinup\_evaluation.restructure module
--------------------------------------------
-
-.. automodule:: nemo_spinup_evaluation.restructure
-   :members:
-   :show-inheritance:
-   :undoc-members:
-
 nemo\_spinup\_evaluation.standardise\_inputs module
 ---------------------------------------------------
 
