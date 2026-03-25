@@ -12,7 +12,7 @@ output_variables:
   salinity: grid_T_3D.nc
   # ...
 ```
-- **Behavior:** The loader will try to infer the correct variable name (e.g., `toce` for temperature) from a list of likely candidates for each field.
+- **Behaviour:** The loader will try to infer the correct variable name (e.g., `toce` for temperature) from a list of likely candidates for each field.
 
 ### 2. Rich Form
 
@@ -24,7 +24,7 @@ output_variables:
     time_from: density  # (optional) use time axis from another variable
   # ...
 ```
-- **Behavior:** You can explicitly specify the file, the variable name within the file, and optionally a `time_from` field to use the time axis from another variable.
+- **Behaviour:** You can explicitly specify the file, the variable name within the file, and optionally a `time_from` field to use the time axis from another variable.
 
 You can mix and match simple and rich forms in the same config. The loader will handle both.
 

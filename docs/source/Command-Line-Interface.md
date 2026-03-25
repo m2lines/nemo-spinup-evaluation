@@ -1,9 +1,9 @@
 # Command-Line Usage
 
-The main entry point is `src/spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
+The main entry point is `src/nemo_spinup_evaluation/cli.py` (or the installed `spinup-eval` script):
 
 ```sh
-python -m spinup_evaluation.cli \
+python -m nemo_spinup_evaluation.cli \
   --sim-path <simulation_dir>            # Required: path to simulation directory
   [--ref-sim-path <reference_sim_dir>]   # Optional: path to reference simulation
   [--config configs/DINO-setup.yaml]     # Optional: YAML config file (default shown)
