@@ -204,6 +204,14 @@ output_variables:
   velocity_v: grid_V_3D.nc
 ```
 
+## Grid Files
+
+All 2D and 3D grid files specified as `output_variables` must be temporally aligned. This can be easily done using the [CDO tools](https://code.mpimet.mpg.de/projects/cdo) (Climate Data Operators), e.g. resampling a SSH 2D grid to yearly cadence:
+
+```bash
+cdo yearmean DINO_1m_grid_T.nc DINO_1y_grid_T.nc
+```
+
 
 ## Output Files
 
