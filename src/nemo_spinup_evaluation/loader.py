@@ -144,6 +144,42 @@ def _check_required_coords(
         raise KeyError(msg)
 
 
+def _check_grid_time_alignment(grid_data: Mapping[str, xr.DataArray | xr.Dataset]):
+    """
+    Check grid variables have aligned time coordinates to ensure temporal consistency.
+
+    Parameters
+    ----------
+    grid_data : Mapping[str, xr.DataArray | xr.Dataset]
+        A dictionary of all grid variables and corresponding DataArray.
+
+    Raises
+    ------
+    ValueError
+        When the time_counter of any variable differs from the others.
+    """
+    # Use the first variable as a reference
+    first_var = next(iter(grid_data))
+    ref_time = grid_data[first_var]["time_counter"]
+
+    # Compare all variables to the reference
+    for name, da in grid_data.items():
+        # .equals is not used here because grid variables can optionally include
+        # time_centered as an auxiliary coordinate which would cause the comparison to
+        # fail regardless of time_counter equality
+        if (
+            len(da.time_counter) != len(ref_time.time_counter)
+            or not (ref_time.values == da.time_counter.values).all()
+        ):
+            msg = (
+                "Time coordinates for grid variable "
+                f"{name} differ from {first_var}. "
+                "All grid files must have identical time steps "
+                "with the same start time and frequency."
+            )
+            raise ValueError(msg)
+
+
 def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> Path:
     """Resolve the mesh mask path, handling absolute and relative paths."""
     p = Path(mesh_mask)
@@ -352,5 +388,9 @@ def load_dino_data(
 
     for name, da in data["grid"].items():
         _check_required_coords(da, ("time_counter", "nav_lat", "nav_lon"), name)
+
+    # Check that grid variables are temporally aligned
+    if data["grid"]:
+        _check_grid_time_alignment(data["grid"])
 
     return data
