@@ -36,7 +36,7 @@ OUT_DIR="tests/utils/build_fixtures_out"
 SUB_A="$OUT_DIR/DINO_subsampled_A"
 SUB_B="$OUT_DIR/DINO_subsampled_B"
 RESULTS="$OUT_DIR/results"
-ARCHIVE="$OUT_DIR/spinup-eval-fixtures.tar.gz"
+ARCHIVE="$OUT_DIR/DINO-simple-small.tar.gz"
 
 # canonical fixture name -> source file
 declare -a CANON=(grid_T_2D.nc grid_T_3D.nc grid_U_3D.nc grid_V_3D.nc)
