@@ -95,16 +95,18 @@ def temperature_BWbox_metric(
     Average Temperature in a U-shaped "Bottom Water" box corresponding to waters below
     3000m or beyond 30 degrees of latitude North and South.
 
-    ________________________________________________ _Surface
-    | . . . . |__________________________| . . . . |_500m
-    | . . . . |                          | . . . . |
-    | . . . . |        Deep Water        | . . . . |
-    | . . . . |__________________________| . . . . |_3000m
-    | . . . . . . . . Bottom Water . . . . . . . . |
-    |______________________________________________|_Bottom
-    S        30S           Eq.          30N        N
+    .. code-block:: text
 
-    Figure : Schematic Representation of the Bottom Water box used in this metric.
+        ________________________________________________ _Surface
+        | . . . . |__________________________| . . . . |_500m
+        | . . . . |                          | . . . . |
+        | . . . . |        Deep Water        | . . . . |
+        | . . . . |__________________________| . . . . |_3000m
+        | . . . . . . . . Bottom Water . . . . . . . . |
+        |______________________________________________|_Bottom
+        S        30S           Eq.          30N        N
+
+    Figure: Schematic Representation of the Bottom Water box used in this metric.
     Unit: °C
 
     Parameters
@@ -151,16 +153,18 @@ def temperature_DWbox_metric(
     Average Temperature in a "Deep Water" box corresponding to waters between 500m
     and 3000m depth and 30°N and 30°S.
 
-    ________________________________________________ _Surface
-    |         |__________________________|         |_500m
-    |         | . . . . . . . . . . . . .|         |
-    |         | . . . .Deep Water . . . .|         |
-    |         |__________________________|         |_3000m
-    |                 Bottom Water                 |
-    |______________________________________________|_Bottom
-    S        30S           Eq.          30N        N
+    .. code-block:: text
 
-    Figure : Schematic Representation of the Deep Water box used in this metric.
+        ________________________________________________ _Surface
+        |         |__________________________|         |_500m
+        |         | . . . . . . . . . . . . .|         |
+        |         | . . . .Deep Water . . . .|         |
+        |         |__________________________|         |_3000m
+        |                 Bottom Water                 |
+        |______________________________________________|_Bottom
+        S        30S           Eq.          30N        N
+
+    Figure: Schematic Representation of the Deep Water box used in this metric.
     Unit: °C
 
     Parameters

@@ -275,18 +275,16 @@ def load_dino_data(
 
     Returns
     -------
-      {
-        "mesh_mask": xr.Dataset,
-        "restart": xr.Dataset | None,
-        "grid": {canon: xr.DataArray, ...},
-        "files": {relative_path: xr.Dataset, ...},
-        "paths": Dict[str, object] = {
-            "base": base,
-            "mesh_mask": None,
-            "restart": None,
-            "output_files": [],
-        }
-      }
+    dict
+        A dictionary with the following keys:
+
+        - ``mesh_mask``: xr.Dataset
+        - ``restart``: xr.Dataset or None
+        - ``grid``: dict mapping canonical name to xr.DataArray
+        - ``files``: dict mapping relative path to xr.Dataset
+        - ``paths``: dict with keys ``base``, ``mesh_mask``, ``restart``,
+          ``output_files``
+
     """
     if mode not in ["output", "restart", "both"]:
         msg = "Mode must be one of 'output', 'restart', 'both'"
