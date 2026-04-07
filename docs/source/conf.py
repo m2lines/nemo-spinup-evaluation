@@ -9,8 +9,8 @@ sys.path.insert(0, os.path.abspath("../../src"))  # assumes your code is in root
 # -- Project information -----------------------------------------------------
 project = "nemo-spinup-evaluation"
 # ruff: noqa: A001
-copyright = "2026, Matt Archer, Surbhi Goel"
-author = "Matt Archer, Surbhi Goel"
+copyright = "2025, nemo-spinup-evaluation contributors"
+author = "Matt Archer, Simon Sadler, Surbhi Goel"
 release = _get_version("nemo-spinup-evaluation")
 
 # -- General configuration ---------------------------------------------------
