@@ -171,7 +171,7 @@ output_variables:
   salinity: grid_T_3D.nc
   # ...
 ```
-**Behavior:** The loader will try to infer the correct variable name (e.g., `toce` for temperature) from a list of likely candidates for each field.
+**Behaviour:** The loader will try to infer the correct variable name (e.g., `toce` for temperature) from a list of likely candidates for each field.
 
 ### Rich Form
 

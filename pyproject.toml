@@ -9,6 +9,7 @@ description = "Climate model spinup evaluation metrics and diagnostics"
 requires-python = ">=3.10"
 authors = [
   {name = "Matt Archer", email = "ma595@cam.ac.uk"},
+  {name = "Simon Sadler", email = "ss3272@cam.ac.uk"},
   {name = "Surbhi Goel", email = "sg2147@cam.ac.uk"},
 ]
 readme = "README.md"
@@ -36,7 +37,13 @@ dev = [
     "pytest>=7.0.0",
     "pytest-cov",
     "mypy",
-    "pre-commit",
+    "pre-commit"
+]
+docs = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "myst-parser",
+    "sphinx-autodoc-typehints"
 ]
 
 [project.urls]
