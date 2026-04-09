@@ -180,10 +180,9 @@ output_variables:
   temperature:
     file: grid_T_3D.nc
     var: toce
-    time_from: density  # (optional) use time axis from another variable
   # ...
 ```
-**Behaviour:** You can explicitly specify the file, the variable name within the file, and optionally a `time_from` field to use the time axis from another variable.
+**Behavior:** You can explicitly specify the file and the variable name within the file.
 
 You can mix and match simple and rich forms in the same config. The loader will handle both.
 
@@ -203,6 +202,14 @@ output_variables:
   ssh: grid_T_2D.nc
   velocity_u: grid_U_3D.nc
   velocity_v: grid_V_3D.nc
+```
+
+## Grid Files
+
+All 2D and 3D grid files specified as `output_variables` must be temporally aligned. This can be easily done using the [CDO tools](https://code.mpimet.mpg.de/projects/cdo) (Climate Data Operators), e.g. resampling a SSH 2D grid to yearly cadence:
+
+```bash
+cdo yearmean DINO_1m_grid_T.nc DINO_1y_grid_T.nc
 ```
 
 

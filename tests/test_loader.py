@@ -1,10 +1,12 @@
 from pathlib import Path
 
+import cftime
 import pytest
 import xarray as xr
 import yaml
 
 from nemo_spinup_evaluation.loader import (
+    _check_grid_time_alignment,
     _check_required_coords,
     load_dino_data,
     load_grid_variables,
@@ -266,3 +268,42 @@ def test_check_required_coords():
     # ...and multiple missing
     with pytest.raises(KeyError, match=r"missing in test_dataset: missing, depth"):
         _check_required_coords(ds, ("missing", "depth", "time_counter"), "test_dataset")
+
+
+def test_check_grid_time_alignment(test_data_path):
+    """Test that _check_grid_time_alignment validates time_counters."""
+
+    grid_files = {
+        "temperature": "grid_T_3D.nc",
+        "salinity": "grid_T_3D.nc",
+        "density": "grid_T_3D.nc",
+        "ssh": "grid_T_2D.nc",
+    }
+
+    files_cache = {}
+    grid_vars = load_grid_variables(test_data_path, grid_files, files_cache)
+
+    # Test data with correct temporal alignment
+    _check_grid_time_alignment(grid_vars)
+
+    # Test different times by changing the first entry
+    orig_coords = grid_vars["ssh"].coords["time_counter"].values.copy()
+    new_coords = orig_coords.copy()
+    new_coords[0] = cftime.Datetime360Day(1, 1, 1, has_year_zero=True)
+    grid_vars["ssh"] = grid_vars["ssh"].assign_coords(time_counter=new_coords)
+
+    with pytest.raises(ValueError, match=r"ssh differ from temperature"):
+        _check_grid_time_alignment(grid_vars)
+
+    ## Reset coords
+    grid_vars["ssh"] = grid_vars["ssh"].assign_coords(time_counter=orig_coords)
+
+    # Test different length time_counters by adding a new time step
+    extra = grid_vars["ssh"].isel(time_counter=-1)
+    extra = extra.assign_coords(
+        time_counter=cftime.Datetime360Day(3, 7, 1, has_year_zero=True)
+    )
+    grid_vars["ssh"] = xr.concat([grid_vars["ssh"], extra], dim="time_counter")
+
+    with pytest.raises(ValueError, match=r"ssh differ from temperature"):
+        _check_grid_time_alignment(grid_vars)
