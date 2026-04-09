@@ -19,7 +19,7 @@ def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Da
         if not os.path.exists(full):
             msg = f"File not found: {full}"
             raise FileNotFoundError(msg)
-        cache[relpath] = xr.open_dataset(full)
+        cache[relpath] = xr.open_dataset(full, chunks={})
     return cache[relpath]
 
 
@@ -200,7 +200,7 @@ def load_mesh_mask(path: Path) -> xr.Dataset:
     if not path.exists():
         msg = f"Mesh mask file not found: {path}"
         raise FileNotFoundError(msg)
-    ds = xr.open_dataset(path)
+    ds = xr.open_dataset(path, chunks={})
     required_vars = ["tmask", "e1t", "e2t", "e3t_0"]
     missing = [v for v in required_vars if v not in ds.variables]
     if missing:
@@ -340,7 +340,7 @@ def load_dino_data(
             raise FileNotFoundError(msg)
         else:
             paths["restart"] = restart_path
-            data["restart"] = xr.open_dataset(restart_path)
+            data["restart"] = xr.open_dataset(restart_path, chunks={})
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
@@ -352,7 +352,7 @@ def load_dino_data(
         if restart_path is None:
             msg = "No restart file found matching pattern."
             raise FileNotFoundError(msg)
-        data["restart"] = xr.open_dataset(restart_path)
+        data["restart"] = xr.open_dataset(restart_path, chunks={})
         vars_map = load_grid_variables(base, var_specs, files_cache)
         data["grid"].update(vars_map)
 
