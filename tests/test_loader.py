@@ -198,16 +198,16 @@ def test_load_grid_variables_simple_format(test_data_path):
 
 
 def test_load_grid_variables_rich_format(test_data_path):
-    """Test loading grid variables using rich format (variable: {file: .., var: ..})."""
+    """Test loading grid variables using rich format (variable: {filename: .., term: ..})."""
 
-    # Rich format - explicit file and variable names
+    # Rich format - explicit filename and term (variable name in dataset)
     # Custom names are used to test that the explicit variable names
     # are used instead of substitutions based on the key name
     rich_specs = {
-        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
-        "custom_salinity": {"file": "grid_T_3D.nc", "var": "soce"},
-        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
-        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
+        "temperature": {"filename": "grid_T_3D.nc", "term": "toce"},
+        "custom_salinity": {"filename": "grid_T_3D.nc", "term": "soce"},
+        "custom_density": {"filename": "grid_T_3D.nc", "term": "rhop"},
+        "ssh": {"filename": "grid_T_2D.nc", "term": "ssh"},
     }
 
     files_cache = {}
@@ -234,10 +234,10 @@ def test_load_grid_variables_rich_format_missing_var(test_data_path):
 
     # Rich format - explicit file and variable names, some invalid
     rich_specs = {
-        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
-        "custom_salinity": {"file": "grid_T_3D.nc", "var": "no_var"},
-        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
-        "ssh": {"file": "grid_T_2D.nc", "var": "no_var"},
+        "temperature": {"filename": "grid_T_3D.nc", "term": "toce"},
+        "custom_salinity": {"filename": "grid_T_3D.nc", "term": "no_var"},
+        "custom_density": {"filename": "grid_T_3D.nc", "term": "rhop"},
+        "ssh": {"filename": "grid_T_2D.nc", "term": "no_var"},
     }
 
     files_cache = {}

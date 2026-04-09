@@ -63,10 +63,10 @@ def _normalise_var_specs(
 
     Accepts either:
       simple form:  {"temperature": "grid_T_3D.nc"}
-      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}}
+      rich form:    {"temperature": {"filename": "grid_T_3D.nc", "term": "toce"}}
 
     Returns canonical mapping:
-      {canon: {"file": str, "var": str}}
+      {canon: {"filename": str, "term": str}}
 
     The file_cache is used to avoid reopening the same dataset multiple times.
     It is built up as the function processes each variable specification.
@@ -91,24 +91,24 @@ def _normalise_var_specs(
             # simple form → infer variable name
             ds = _open_cached(file_cache, base, spec)
             var_name = _infer_var_name(ds, canon)
-            normalised[canon] = {"file": spec, "var": var_name}
+            normalised[canon] = {"filename": spec, "term": var_name}
 
         elif isinstance(spec, Mapping):
-            # rich form should include 'file' and 'var'
-            # the 'var' corresponds to the variable name in the dataset
+            # rich form should include 'filename' and 'term'
+            # the 'term' corresponds to the variable name in the dataset
             # therefore we don't need to infer it
-            if "file" not in spec:
-                msg = f"Missing 'file' for variable '{canon}'."
+            if "filename" not in spec:
+                msg = f"Missing 'filename' for variable '{canon}'."
                 raise ValueError(msg)
-            fname = str(spec["file"])
+            fname = str(spec["filename"])
             ds = _open_cached(file_cache, base, fname)
 
-            if "var" in spec:
-                var_name = str(spec["var"])  # user-specified → trust it
+            if "term" in spec:
+                var_name = str(spec["term"])  # user-specified → trust it
             else:
                 var_name = _infer_var_name(ds, canon)
 
-            entry = {"file": fname, "var": var_name}
+            entry = {"filename": fname, "term": var_name}
             normalised[canon] = entry
 
         else:
@@ -264,8 +264,8 @@ def load_grid_variables(
     # Pull the arrays
     out: Dict[str, xr.DataArray] = {}
     for canon, spec in norm.items():
-        ds = _open_cached(files_cache, base, spec["file"])
-        out[canon] = ds[spec["var"]]
+        ds = _open_cached(files_cache, base, spec["filename"])
+        out[canon] = ds[spec["term"]]
 
     return out
 

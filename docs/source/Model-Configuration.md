@@ -7,11 +7,11 @@ The YAML config (e.g., `configs/DINO-setup.yaml`) maps each canonical field name
 ```yaml
 output_variables:
   temperature:
-    file: grid_T_3D.nc
-    var: toce
+    filename: grid_T_3D.nc
+    term: toce
   salinity:
-    file: grid_T_3D.nc
-    var: soce
+    filename: grid_T_3D.nc
+    term: soce
   # ...
 ```
 
@@ -24,23 +24,23 @@ mesh_mask: mesh_mask.nc
 restart_files: 'restart'
 output_variables:
   temperature:
-    file: grid_T_3D.nc
-    var: toce
+    filename: grid_T_3D.nc
+    term: toce
   salinity:
-    file: grid_T_3D.nc
-    var: soce
+    filename: grid_T_3D.nc
+    term: soce
   density:
-    file: grid_T_3D.nc
-    var: rhop
+    filename: grid_T_3D.nc
+    term: rhop
   ssh:
-    file: grid_T_2D.nc
-    var: ssh
+    filename: grid_T_2D.nc
+    term: ssh
   velocity_u:
-    file: grid_U_3D.nc
-    var: uoce
+    filename: grid_U_3D.nc
+    term: uoce
   velocity_v:
-    file: grid_V_3D.nc
-    var: voce
+    filename: grid_V_3D.nc
+    term: voce
 ```
 
 
