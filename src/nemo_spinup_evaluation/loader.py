@@ -3,7 +3,7 @@
 import glob
 import os
 from pathlib import Path
-from typing import Dict, Mapping, Optional, Union
+from typing import Dict, Mapping, Optional, Union, cast
 
 import xarray as xr
 
@@ -333,6 +333,7 @@ def load_dino_data(
     # restart (optional / controlled by mode)
     data["restart"] = None
     restart_hint = str(setup.get("restart_files") or "")
+
     if mode in ("restart", "both"):
         restart_path = get_restart_file_path(base, restart_hint)
         if restart_path is None:
@@ -344,20 +345,21 @@ def load_dino_data(
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
-    if mode in ("output", "both") and "output_variables" in setup:
-        var_specs: VarSpec = setup["output_variables"]  # simple or rich form accepted
-        # Load variables; this will populate a cache of files so
-        # we do not have to keep reopening files we already opened
+    if mode in ("output", "both"):
+        if "output_variables" not in setup:
+            msg = "Setup file missing output_variables section."
+            raise KeyError(msg)
+
+        # Load grid variables and store paths of each file loaded
+        var_specs = cast(VarSpec, setup["output_variables"])
+        data["grid"] = load_grid_variables(base, var_specs, files_cache)
+        paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
+
         restart_path = get_restart_file_path(base, restart_hint)
         if restart_path is None:
             msg = "No restart file found matching pattern."
             raise FileNotFoundError(msg)
         data["restart"] = xr.open_dataset(restart_path)
-        vars_map = load_grid_variables(base, var_specs, files_cache)
-        data["grid"].update(vars_map)
-
-        # Store the full paths to output files
-        paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
 
     # expose the file cache
     data["files"] = files_cache
