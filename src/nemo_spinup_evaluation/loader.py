@@ -3,13 +3,13 @@
 import glob
 import os
 from pathlib import Path
-from typing import Dict, Mapping, Optional, Union, cast
+from typing import Dict, Mapping, Optional, cast
 
 import xarray as xr
 
 from nemo_spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standardise
 
-VarSpec = Mapping[str, Union[str, Mapping[str, str]]]
+VarSpec = Mapping[str, Mapping[str, str]]
 
 
 def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Dataset:
@@ -24,98 +24,6 @@ def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Da
 
 
 MAX_DISPLAYED_VARIABLES = 20
-
-
-def _infer_var_name(ds: xr.Dataset, canon: str) -> str:
-    """
-    Choose the actual variable name inside a dataset given a canonical name.
-
-    Uses VARIABLE_ALIASES (e.g., {"temperature": ["toce","thetao","temp", ...], ...})
-    and falls back to the canonical name if present.
-    """
-    # exact match first
-    if canon in ds.variables:
-        return canon
-
-    # alias match next
-    aliases = VARIABLE_ALIASES.get(canon, [])
-
-    for name in aliases:
-        if name in ds.variables:
-            return name
-
-    # fail loudly if we can't find a matching variable
-    available = list(ds.variables)
-    msg = (
-        f"Could not find a variable for '{canon}'. "
-        f"Checked aliases {aliases!r} and '{canon}'. "
-        f"Available in file: {available[:MAX_DISPLAYED_VARIABLES]}"
-        f"{'...' if len(available) > MAX_DISPLAYED_VARIABLES else ''}"
-    )
-    raise KeyError(msg)
-
-
-def _normalise_var_specs(
-    var_specs: VarSpec, file_cache: Dict[str, xr.Dataset], base: str
-) -> Dict[str, Dict[str, str]]:
-    """
-    Normalise variable specifications in yaml file.
-
-    Accepts either:
-      simple form:  {"temperature": "grid_T_3D.nc"}
-      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}}
-
-    Returns canonical mapping:
-      {canon: {"file": str, "var": str}}
-
-    The file_cache is used to avoid reopening the same dataset multiple times.
-    It is built up as the function processes each variable specification.
-
-    Parameters
-    ----------
-    var_specs : VarSpec
-        The variable specifications to normalise.
-    file_cache : Dict[str, xr.Dataset]
-        A cache of opened xarray datasets, keyed by file path.
-    base : str
-        The base directory for resolving relative file paths.
-
-    Returns
-    -------
-    Dict[str, Dict[str, str]]
-        A mapping of canonical variable names to their specifications.
-    """
-    normalised: Dict[str, Dict[str, str]] = {}
-    for canon, spec in var_specs.items():
-        if isinstance(spec, str):
-            # simple form → infer variable name
-            ds = _open_cached(file_cache, base, spec)
-            var_name = _infer_var_name(ds, canon)
-            normalised[canon] = {"file": spec, "var": var_name}
-
-        elif isinstance(spec, Mapping):
-            # rich form should include 'file' and 'var'
-            # the 'var' corresponds to the variable name in the dataset
-            # therefore we don't need to infer it
-            if "file" not in spec:
-                msg = f"Missing 'file' for variable '{canon}'."
-                raise ValueError(msg)
-            fname = str(spec["file"])
-            ds = _open_cached(file_cache, base, fname)
-
-            if "var" in spec:
-                var_name = str(spec["var"])  # user-specified → trust it
-            else:
-                var_name = _infer_var_name(ds, canon)
-
-            entry = {"file": fname, "var": var_name}
-            normalised[canon] = entry
-
-        else:
-            msg = f"Bad spec for '{canon}': {spec!r}"
-            raise TypeError(msg)
-
-    return normalised
 
 
 def _check_required_coords(
@@ -243,8 +151,6 @@ def load_grid_variables(
     """
     Build a dict of {canonical_name: DataArray} with a single open per file.
 
-    Supports simple and rich variable specs (see _normalise_var_specs).
-
     Parameters
     ----------
     base : str
@@ -259,12 +165,11 @@ def load_grid_variables(
     Dict[str, xr.DataArray]
         A dictionary mapping canonical variable names to their DataArray objects.
     """
-    norm = _normalise_var_specs(output_specs, files_cache, base)
-
     # Pull the arrays
     out: Dict[str, xr.DataArray] = {}
-    for canon, spec in norm.items():
+    for canon, spec in output_specs.items():
         ds = _open_cached(files_cache, base, spec["file"])
+        # Select specified variable
         out[canon] = ds[spec["var"]]
 
     return out
@@ -355,6 +260,9 @@ def load_dino_data(
         data["grid"] = load_grid_variables(base, var_specs, files_cache)
         paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
 
+        # Check grid variables for temporal alignment
+        _check_grid_time_alignment(data["grid"])
+
         restart_path = get_restart_file_path(base, restart_hint)
         if restart_path is None:
             msg = "No restart file found matching pattern."
@@ -388,9 +296,5 @@ def load_dino_data(
 
     for name, da in data["grid"].items():
         _check_required_coords(da, ("time_counter", "nav_lat", "nav_lon"), name)
-
-    # Check that grid variables are temporally aligned
-    if data["grid"]:
-        _check_grid_time_alignment(data["grid"])
 
     return data

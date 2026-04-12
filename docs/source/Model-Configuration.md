@@ -2,7 +2,7 @@
 
 ## DINO Config File
 
-The YAML config (e.g., `configs/DINO-setup.yaml`) maps each canonical field name to the NetCDF file it lives in and the variable name used inside that file. Both must be specified explicitly — the loader does not infer variable names.
+The YAML config (e.g., `configs/DINO-setup.yaml`) maps each canonical field name to a NetCDF file along with the corresponding variable name. Both must be specified explicitly — the loader does not infer variable names.
 
 ```yaml
 output_variables:
@@ -14,8 +14,6 @@ output_variables:
     var: soce
   # ...
 ```
-
-> **Note:** Support for specifying temporal granularities and resampling (e.g., daily, monthly, seasonal means) is under active development and will be available in a future release.
 
 **Example config:**
 

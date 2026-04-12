@@ -79,7 +79,7 @@ def test_load_dino_data_missing_restart_file(test_data_path, mode):
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
         "restart_files": "missing_restart",
-        "output_variables": {"temperature": "grid_T_3D.nc"},
+        "output_variables": {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}},
     }
 
     with pytest.raises(FileNotFoundError, match=r"restart file"):
@@ -94,7 +94,7 @@ def test_load_dino_data_missing_output_file(test_data_path, mode):
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
         "restart_files": "restart",
-        "output_variables": {"temperature": "missing.nc"},
+        "output_variables": {"temperature": {"file": "missing.nc", "var": "toce"}},
     }
 
     with pytest.raises(FileNotFoundError, match=r"missing.nc"):
@@ -169,19 +169,18 @@ def test_load_dino_data_nav_latlon_promotion(test_data_path, dino_setup, mode):
     assert num_true == NUM_BELOW
 
 
-def test_load_grid_variables_simple_format(test_data_path):
-    """Test loading grid variables using simple format (variable: filename)."""
+def test_load_grid_variables(test_data_path):
+    """Test loading grid variables."""
 
-    # Simple format - just filename
-    simple_specs = {
-        "temperature": "grid_T_3D.nc",
-        "salinity": "grid_T_3D.nc",
-        "density": "grid_T_3D.nc",
-        "ssh": "grid_T_2D.nc",
+    grid_specs = {
+        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
+        "salinity": {"file": "grid_T_3D.nc", "var": "soce"},
+        "density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
     }
 
     files_cache = {}
-    grid_vars = load_grid_variables(str(test_data_path), simple_specs, files_cache)
+    grid_vars = load_grid_variables(str(test_data_path), grid_specs, files_cache)
 
     # Verify grid variable names and datasets
     assert isinstance(grid_vars, dict)
@@ -197,52 +196,21 @@ def test_load_grid_variables_simple_format(test_data_path):
     assert isinstance(grid_vars["ssh"], xr.DataArray)
 
 
-def test_load_grid_variables_rich_format(test_data_path):
-    """Test loading grid variables using rich format (variable: {file: .., var: ..})."""
-
-    # Rich format - explicit file and variable names
-    # Custom names are used to test that the explicit variable names
-    # are used instead of substitutions based on the key name
-    rich_specs = {
-        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
-        "custom_salinity": {"file": "grid_T_3D.nc", "var": "soce"},
-        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
-        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
-    }
-
-    files_cache = {}
-    grid_vars = load_grid_variables(str(test_data_path), rich_specs, files_cache)
-
-    # Verify grid variable names and datasets
-    assert isinstance(grid_vars, dict)
-
-    assert grid_vars["temperature"].name == "toce"
-    assert grid_vars["custom_salinity"].name == "soce"
-    assert grid_vars["custom_density"].name == "rhop"
-    assert grid_vars["ssh"].name == "ssh"
-
-    assert isinstance(grid_vars["temperature"], xr.DataArray)
-    assert isinstance(grid_vars["custom_salinity"], xr.DataArray)
-    assert isinstance(grid_vars["custom_density"], xr.DataArray)
-    assert isinstance(grid_vars["ssh"], xr.DataArray)
-
-
-def test_load_grid_variables_rich_format_missing_var(test_data_path):
+def test_load_grid_variables_missing_var(test_data_path):
     """
-    Test error handling for non-existent variables when loading grid in rich format.
+    Test error handling for non-existent variables when loading grid files.
     """
 
-    # Rich format - explicit file and variable names, some invalid
-    rich_specs = {
+    grid_specs = {
         "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
-        "custom_salinity": {"file": "grid_T_3D.nc", "var": "no_var"},
-        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "salinity": {"file": "grid_T_3D.nc", "var": "no_var"},
+        "density": {"file": "grid_T_3D.nc", "var": "rhop"},
         "ssh": {"file": "grid_T_2D.nc", "var": "no_var"},
     }
 
     files_cache = {}
     with pytest.raises(KeyError, match=r"No variable named"):
-        load_grid_variables(str(test_data_path), rich_specs, files_cache)
+        load_grid_variables(str(test_data_path), grid_specs, files_cache)
 
 
 def test_check_required_coords():
@@ -273,15 +241,15 @@ def test_check_required_coords():
 def test_check_grid_time_alignment(test_data_path):
     """Test that _check_grid_time_alignment validates time_counters."""
 
-    grid_files = {
-        "temperature": "grid_T_3D.nc",
-        "salinity": "grid_T_3D.nc",
-        "density": "grid_T_3D.nc",
-        "ssh": "grid_T_2D.nc",
+    grid_specs = {
+        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
+        "salinity": {"file": "grid_T_3D.nc", "var": "soce"},
+        "density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
     }
 
     files_cache = {}
-    grid_vars = load_grid_variables(test_data_path, grid_files, files_cache)
+    grid_vars = load_grid_variables(test_data_path, grid_specs, files_cache)
 
     # Test data with correct temporal alignment
     _check_grid_time_alignment(grid_vars)
