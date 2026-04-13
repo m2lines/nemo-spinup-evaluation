@@ -1,6 +1,7 @@
 """Functions to load NEMO model output and restart files based on YAML configuration."""
 
 import glob
+import logging
 import os
 from pathlib import Path
 from typing import Dict, Mapping, Optional, Union
@@ -8,6 +9,8 @@ from typing import Dict, Mapping, Optional, Union
 import xarray as xr
 
 from nemo_spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standardise
+
+logger = logging.getLogger(__name__)
 
 VarSpec = Mapping[str, Union[str, Mapping[str, str]]]
 
@@ -321,60 +324,51 @@ def load_dino_data(
         msg = "Mode must be one of 'output', 'restart', 'both'"
         raise ValueError(msg)
 
-    open_kw = {"chunks": {}} if lazy else {}
-    base = os.path.abspath(base)
-
-    data: Dict[str, object] = {}
-    files_cache: Dict[str, xr.Dataset] = {}
-
-    # Initialize paths dictionary
-    paths: Dict[str, object] = {
-        "base": base,
-        "mesh_mask": None,
-        "restart": None,
-        "output_files": [],
-    }
-
-    # mesh mask (required)
     if "mesh_mask" not in setup:
         msg = "setup must specify 'mesh_mask'."
         raise ValueError(msg)
 
-    # Resolve mesh mask path
+    open_kw = {"chunks": {}} if lazy else {}
+    base = os.path.abspath(base)
+
+    # Resolve paths upfront
     mesh_mask_path = resolve_mesh_mask(str(setup["mesh_mask"]), base)
-    paths["mesh_mask"] = str(mesh_mask_path)
+    restart_hint = str(setup.get("restart_files") or "")
+    restart_path = get_restart_file_path(base, restart_hint)
+
+    if restart_path is None and mode in ("restart", "both"):
+        msg = "No restart file found matching pattern."
+        raise FileNotFoundError(msg)
+    if restart_path is None and mode == "output":
+        logger.warning(
+            "No restart file found. The check_density_computed metric will be skipped."
+        )
+
+    # Load data
+    data: Dict[str, object] = {}
+    files_cache: Dict[str, xr.Dataset] = {}
+
     data["mesh_mask"] = load_mesh_mask(mesh_mask_path, lazy=lazy)
 
-    # restart (optional / controlled by mode)
-    data["restart"] = None
-    restart_hint = str(setup.get("restart_files") or "")
-    if mode in ("restart", "both"):
-        restart_path = get_restart_file_path(base, restart_hint)
-        if restart_path is None:
-            msg = "No restart file found matching pattern."
-            raise FileNotFoundError(msg)
-        else:
-            paths["restart"] = restart_path
-            data["restart"] = xr.open_dataset(restart_path, **open_kw)
+    if restart_path is not None:
+        data["restart"] = xr.open_dataset(restart_path, **open_kw)
+    else:
+        data["restart"] = None
 
-    # outputs (optional / controlled by mode)
     data["grid"] = {}
     if mode in ("output", "both") and "output_variables" in setup:
-        var_specs: VarSpec = setup["output_variables"]  # simple or rich form accepted
-        # Load variables; this will populate a cache of files so
-        # we do not have to keep reopening files we already opened
-        restart_path = get_restart_file_path(base, restart_hint)
-        if restart_path is None:
-            msg = "No restart file found matching pattern."
-            raise FileNotFoundError(msg)
-        data["restart"] = xr.open_dataset(restart_path, **open_kw)
+        var_specs: VarSpec = setup["output_variables"]
         vars_map = load_grid_variables(base, var_specs, files_cache, lazy=lazy)
         data["grid"].update(vars_map)
 
-        # Store the full paths to output files
-        paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
+    # Build paths metadata
+    paths: Dict[str, object] = {
+        "base": base,
+        "mesh_mask": str(mesh_mask_path),
+        "restart": restart_path,
+        "output_files": [os.path.join(base, relpath) for relpath in files_cache],
+    }
 
-    # expose the file cache
     data["files"] = files_cache
     data["paths"] = paths
 
