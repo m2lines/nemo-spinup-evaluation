@@ -204,6 +204,17 @@ output_variables:
   velocity_v: grid_V_3D.nc
 ```
 
+## Coordinate Naming
+
+We expect `nav_lat` and `nav_lon` to be coordinates (as seen by xarray) in all input files. If your files use `lat`/`lon` instead, rename them before running evaluation:
+
+```python
+import xarray as xr
+ds = xr.open_dataset("your_file.nc").load()
+ds = ds.rename({"lat": "nav_lat", "lon": "nav_lon"})
+ds.to_netcdf("your_file_fixed.nc", unlimited_dims="time_counter")
+```
+
 ## Grid Files
 
 All 2D and 3D grid files specified as `output_variables` must be temporally aligned. This can be easily done using the [CDO tools](https://code.mpimet.mpg.de/projects/cdo) (Climate Data Operators), e.g. resampling a SSH 2D grid to yearly cadence:

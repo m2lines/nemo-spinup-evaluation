@@ -141,6 +141,11 @@ def _check_required_coords(
     missing = [coord for coord in required if coord not in data.coords]
     if missing:
         msg = f"Required coordinate(s) missing in {name}: {', '.join(missing)}"
+        if "nav_lat" in missing or "nav_lon" in missing:
+            msg += (
+                ". If your files use 'lat'/'lon' or other names instead "
+                "refer to `Coordinate Naming` section in the README."
+            )
         raise KeyError(msg)
 
 
