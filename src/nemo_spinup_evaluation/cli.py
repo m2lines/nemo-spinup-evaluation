@@ -243,8 +243,8 @@ def _compute_means(
     abs_err = abs(delta)
 
     # Summary scalars
-    mae = float(abs_err.mean(skipna=True).values.item())
-    rmse = float((delta**2).mean(skipna=True).values.item() ** 0.5)
+    mae = float(abs_err.mean(skipna=True).values)
+    rmse = float((delta**2).mean(skipna=True).values) ** 0.5
 
     return delta, abs_err, mae, rmse
 
@@ -281,7 +281,7 @@ def compute_diffs_and_stats(
             continue
 
         try:
-            delta, abs_err, mae, rmse = _compute_means(val, ref_val)
+            delta, _abs_err, mae, rmse = _compute_means(val, ref_val)
 
             # keep names helpful
             delta = delta.rename(f"diff_{key}")

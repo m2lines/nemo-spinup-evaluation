@@ -28,7 +28,7 @@ def _build_timeseries_dataframe(results: Mapping[str, Any]) -> pd.DataFrame:
                 timestamp = [str(t) for t in v["time_counter"].values]
             ts_cols[k] = v.values
         elif isinstance(v, xr.DataArray) and v.ndim == 0:
-            ts_cols[k] = [v.item()]
+            ts_cols[k] = [float(v)]
         elif not k.endswith(("_mae", "_rmse")):
             ts_cols[k] = [v]
 
