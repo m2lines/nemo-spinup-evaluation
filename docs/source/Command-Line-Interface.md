@@ -10,6 +10,7 @@ nemo-spinup-evaluation \
   [--mode output|restart|both]           # Which metric suite(s) to run (default: both)
   [--results-dir results]                # Output directory (default shown)
   [--result-file-prefix metrics_results] # Output file prefix (default shown)
+  [--eager]                              # Load data eagerly with numpy (default: off)
 ```
 
 **Arguments:**
@@ -19,5 +20,6 @@ nemo-spinup-evaluation \
 - `--mode`: Which metric suite(s) to run: `output`, `restart`, or `both` (default: `both`).
 - `--results-dir`: Directory to save output CSVs (default: `results`).
 - `--result-file-prefix`: Prefix for output files (default: `metrics_results`).
+- `--eager`: Load data eagerly using numpy instead of lazily with dask. Faster for small files.
 
 At least one of `--sim-path` or `--ref-sim-path` must be supplied. Providing only `--sim-path` runs the metrics on that simulation in isolation; providing both runs a diff between the two.
