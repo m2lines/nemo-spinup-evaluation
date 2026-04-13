@@ -71,11 +71,10 @@ def test_load_dino_data_missing_mesh_mask(test_data_path, mode):
         load_dino_data(mode, test_data_path, bad_setup)
 
 
-@pytest.mark.parametrize("mode", ["restart", "output", "both"])
+@pytest.mark.parametrize("mode", ["restart", "both"])
 def test_load_dino_data_missing_restart_file(test_data_path, mode):
     """Test error handling when restart file is missing."""
 
-    # Setup with non-existent restart file
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
         "restart_files": "missing_restart",
@@ -84,6 +83,20 @@ def test_load_dino_data_missing_restart_file(test_data_path, mode):
 
     with pytest.raises(FileNotFoundError, match=r"restart file"):
         load_dino_data(mode, test_data_path, bad_setup)
+
+
+def test_load_dino_data_missing_restart_output_mode(test_data_path, caplog):
+    """Output mode warns and continues without a restart file."""
+
+    setup = {
+        "mesh_mask": "mesh_mask.nc",
+        "restart_files": "missing_restart",
+        "output_variables": {"temperature": "grid_T_3D.nc"},
+    }
+
+    data = load_dino_data("output", test_data_path, setup)
+    assert data["restart"] is None
+    assert "check_density_computed" in caplog.text
 
 
 @pytest.mark.parametrize("mode", ["output", "both"])
