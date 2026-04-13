@@ -1,6 +1,7 @@
 """Functions to load NEMO model output and restart files based on YAML configuration."""
 
 import glob
+import logging
 import os
 from pathlib import Path
 from typing import Dict, Mapping, Optional, Union
@@ -8,6 +9,8 @@ from typing import Dict, Mapping, Optional, Union
 import xarray as xr
 
 from nemo_spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standardise
+
+logger = logging.getLogger(__name__)
 
 VarSpec = Mapping[str, Union[str, Mapping[str, str]]]
 
@@ -336,6 +339,10 @@ def load_dino_data(
     if restart_path is None and mode in ("restart", "both"):
         msg = "No restart file found matching pattern."
         raise FileNotFoundError(msg)
+    if restart_path is None and mode == "output":
+        logger.warning(
+            "No restart file found. The check_density_computed metric will be skipped."
+        )
 
     # Load data
     data: Dict[str, object] = {}
