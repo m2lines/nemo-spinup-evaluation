@@ -92,6 +92,7 @@ def test_integration_with_real_data(real_input_dir, output_file_path, run):
         "both",
         "--results-dir",
         str(output_file_path),
+        "--eager",
     ]
 
     if run == "with_ref":

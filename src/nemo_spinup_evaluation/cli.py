@@ -90,6 +90,13 @@ def parse_args(argv) -> argparse.Namespace:
         default="metrics_results",
         help="Prefix to use for the result files.",
     )
+    parser.add_argument(
+        "--eager",
+        action="store_true",
+        default=False,
+        help="Load data eagerly (numpy) instead of lazily (dask). "
+        "Faster for small files.",
+    )
     args = parser.parse_args(argv)
 
     if not args.sim_path and not args.ref_sim_path:
@@ -342,12 +349,15 @@ def main(argv=None) -> int:
     prefix: str = args.result_file_prefix
 
     # Load primary and (optional) reference datasets
-    data = load_dino_data(args.mode, args.sim_path, dino_setup, do_standardise=True)
+    lazy = not args.eager
+    data = load_dino_data(
+        args.mode, args.sim_path, dino_setup, do_standardise=True, lazy=lazy
+    )
 
     data_ref = None
     if args.ref_sim_path:
         data_ref = load_dino_data(
-            args.mode, args.ref_sim_path, dino_setup, do_standardise=True
+            args.mode, args.ref_sim_path, dino_setup, do_standardise=True, lazy=lazy
         )
 
     # Extract paths with proper type cast
