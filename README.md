@@ -80,6 +80,7 @@ nemo-spinup-evaluation --sim-path <simulation_dir> --ref-sim-path <reference_dir
 | `--results-dir`        | Directory to save output CSVs                                 | `results`                 | No       |
 | `--result-file-prefix` | Prefix for output files                                       | `metrics_results`         | No       |
 | `--mode`               | Which metric suite(s) to run: `output`, `restart`, or `both`  | `both`                    | No       |
+| `--eager`              | Load data eagerly (numpy) instead of lazily (dask)            | `false`                   | No       |
 
 
 ## Tests

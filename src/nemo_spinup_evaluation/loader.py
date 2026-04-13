@@ -12,14 +12,17 @@ from nemo_spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standard
 VarSpec = Mapping[str, Union[str, Mapping[str, str]]]
 
 
-def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Dataset:
+def _open_cached(
+    cache: Dict[str, xr.Dataset], base: str, relpath: str, lazy: bool = True
+) -> xr.Dataset:
     """Open a dataset once, caching by relative path."""
     if relpath not in cache:
         full = os.path.join(base, relpath)
         if not os.path.exists(full):
             msg = f"File not found: {full}"
             raise FileNotFoundError(msg)
-        cache[relpath] = xr.open_dataset(full)
+        open_kw = {"chunks": {}} if lazy else {}
+        cache[relpath] = xr.open_dataset(full, **open_kw)
     return cache[relpath]
 
 
@@ -56,7 +59,7 @@ def _infer_var_name(ds: xr.Dataset, canon: str) -> str:
 
 
 def _normalise_var_specs(
-    var_specs: VarSpec, file_cache: Dict[str, xr.Dataset], base: str
+    var_specs: VarSpec, file_cache: Dict[str, xr.Dataset], base: str, lazy: bool = True
 ) -> Dict[str, Dict[str, str]]:
     """
     Normalise variable specifications in yaml file.
@@ -79,6 +82,8 @@ def _normalise_var_specs(
         A cache of opened xarray datasets, keyed by file path.
     base : str
         The base directory for resolving relative file paths.
+    lazy : bool
+        Whether to use dask-backed lazy loading.
 
     Returns
     -------
@@ -89,7 +94,7 @@ def _normalise_var_specs(
     for canon, spec in var_specs.items():
         if isinstance(spec, str):
             # simple form → infer variable name
-            ds = _open_cached(file_cache, base, spec)
+            ds = _open_cached(file_cache, base, spec, lazy=lazy)
             var_name = _infer_var_name(ds, canon)
             normalised[canon] = {"file": spec, "var": var_name}
 
@@ -101,7 +106,7 @@ def _normalise_var_specs(
                 msg = f"Missing 'file' for variable '{canon}'."
                 raise ValueError(msg)
             fname = str(spec["file"])
-            ds = _open_cached(file_cache, base, fname)
+            ds = _open_cached(file_cache, base, fname, lazy=lazy)
 
             if "var" in spec:
                 var_name = str(spec["var"])  # user-specified → trust it
@@ -195,12 +200,13 @@ def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> Path:
     return candidate
 
 
-def load_mesh_mask(path: Path) -> xr.Dataset:
+def load_mesh_mask(path: Path, lazy: bool = True) -> xr.Dataset:
     """Load the NEMO mesh mask file and validate required fields."""
     if not path.exists():
         msg = f"Mesh mask file not found: {path}"
         raise FileNotFoundError(msg)
-    ds = xr.open_dataset(path)
+    open_kw = {"chunks": {}} if lazy else {}
+    ds = xr.open_dataset(path, **open_kw)
     required_vars = ["tmask", "e1t", "e2t", "e3t_0"]
     missing = [v for v in required_vars if v not in ds.variables]
     if missing:
@@ -238,7 +244,10 @@ def get_restart_file_path(base: str, restart_hint: Optional[str]) -> Optional[st
 
 
 def load_grid_variables(
-    base: str, output_specs: VarSpec, files_cache: Dict[str, xr.Dataset]
+    base: str,
+    output_specs: VarSpec,
+    files_cache: Dict[str, xr.Dataset],
+    lazy: bool = True,
 ) -> Dict[str, xr.DataArray]:
     """
     Build a dict of {canonical_name: DataArray} with a single open per file.
@@ -253,18 +262,20 @@ def load_grid_variables(
         The variable specifications for the output data.
     files_cache : Dict[str, xr.Dataset]
         A cache of opened xarray datasets, keyed by file path.
+    lazy : bool
+        Whether to use dask-backed lazy loading.
 
     Returns
     -------
     Dict[str, xr.DataArray]
         A dictionary mapping canonical variable names to their DataArray objects.
     """
-    norm = _normalise_var_specs(output_specs, files_cache, base)
+    norm = _normalise_var_specs(output_specs, files_cache, base, lazy=lazy)
 
     # Pull the arrays
     out: Dict[str, xr.DataArray] = {}
     for canon, spec in norm.items():
-        ds = _open_cached(files_cache, base, spec["file"])
+        ds = _open_cached(files_cache, base, spec["file"], lazy=lazy)
         out[canon] = ds[spec["var"]]
 
     return out
@@ -275,6 +286,7 @@ def load_dino_data(
     base: str,
     setup: Mapping[str, object],
     do_standardise: bool = True,
+    lazy: bool = True,
 ) -> Dict[str, object]:
     """
     Load DINO data according to YAML setup.
@@ -289,6 +301,8 @@ def load_dino_data(
        A mapping containing the YAML configuration for data loading.
     do_standardise : bool
        Whether to standardise variable names using aliases.
+    lazy : bool
+       Whether to use dask-backed lazy loading.
 
     Returns
     -------
@@ -307,6 +321,7 @@ def load_dino_data(
         msg = "Mode must be one of 'output', 'restart', 'both'"
         raise ValueError(msg)
 
+    open_kw = {"chunks": {}} if lazy else {}
     base = os.path.abspath(base)
 
     data: Dict[str, object] = {}
@@ -328,7 +343,7 @@ def load_dino_data(
     # Resolve mesh mask path
     mesh_mask_path = resolve_mesh_mask(str(setup["mesh_mask"]), base)
     paths["mesh_mask"] = str(mesh_mask_path)
-    data["mesh_mask"] = load_mesh_mask(mesh_mask_path)
+    data["mesh_mask"] = load_mesh_mask(mesh_mask_path, lazy=lazy)
 
     # restart (optional / controlled by mode)
     data["restart"] = None
@@ -340,7 +355,7 @@ def load_dino_data(
             raise FileNotFoundError(msg)
         else:
             paths["restart"] = restart_path
-            data["restart"] = xr.open_dataset(restart_path)
+            data["restart"] = xr.open_dataset(restart_path, **open_kw)
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
@@ -352,8 +367,8 @@ def load_dino_data(
         if restart_path is None:
             msg = "No restart file found matching pattern."
             raise FileNotFoundError(msg)
-        data["restart"] = xr.open_dataset(restart_path)
-        vars_map = load_grid_variables(base, var_specs, files_cache)
+        data["restart"] = xr.open_dataset(restart_path, **open_kw)
+        vars_map = load_grid_variables(base, var_specs, files_cache, lazy=lazy)
         data["grid"].update(vars_map)
 
         # Store the full paths to output files

@@ -94,6 +94,9 @@ def test_integration_with_real_data(real_input_dir, output_file_path, run):
         str(output_file_path),
     ]
 
+    if run != "no_ref":
+        args.append("--eager")
+
     if run == "with_ref":
         args += ["--ref-sim-path", "tests/data/DINO_subsampled_B"]
     elif run == "self_diff":
