@@ -1,5 +1,17 @@
 #!/bin/bash
-curl -O https://thredds-su.ipsl.fr/thredds/fileServer/NEMO-SPINUP/evaluation/test-data/subsampled/DINO-simple-small.tar.gz
-echo "Extracting test data to tests/data"
-tar -xzf DINO-simple-small.tar.gz -C tests/data
-rm DINO-simple-small.tar.gz
+set -e
+
+DATA_DIR="tests/data"
+ZIP_FILE="evaluation-test.zip"
+CONCEPT_ID="19474413"
+
+# Resolve the concept ID to the latest version
+LATEST=$(curl -sI "https://zenodo.org/records/${CONCEPT_ID}" | grep -i "^location:" | tr -d '\r' | awk -F/ '{print $NF}')
+ZENODO_URL="https://zenodo.org/records/${LATEST}/files/${ZIP_FILE}"
+
+echo $LATEST
+
+mkdir -p "${DATA_DIR}"
+curl -L -o "${ZIP_FILE}" "${ZENODO_URL}"
+unzip -o "${ZIP_FILE}" -d "${DATA_DIR}"
+# rm "${ZIP_FILE}"
