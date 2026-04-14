@@ -239,7 +239,7 @@ The project follows [Semantic Versioning](https://semver.org/):
 To create a release:
 
 1. Update the version in `pyproject.toml`
-2. Update `CHANGELOG.md`
+2. Create short description of changes (i.e. PRs) - CHANGELOG
 3. Create a GitHub release with notes
 
 ## Getting Help
