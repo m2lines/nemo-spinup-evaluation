@@ -3,13 +3,12 @@
 import glob
 import os
 from pathlib import Path
-from typing import Dict, Mapping, Optional, Union
+from typing import Dict, Mapping, Optional, cast
 
 import xarray as xr
 
-from nemo_spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standardise
-
-VarSpec = Mapping[str, Union[str, Mapping[str, str]]]
+VarSpec = Mapping[str, Mapping[str, str]]
+VarMap = Mapping[str, list[str]]
 
 
 def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Dataset:
@@ -24,98 +23,6 @@ def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Da
 
 
 MAX_DISPLAYED_VARIABLES = 20
-
-
-def _infer_var_name(ds: xr.Dataset, canon: str) -> str:
-    """
-    Choose the actual variable name inside a dataset given a canonical name.
-
-    Uses VARIABLE_ALIASES (e.g., {"temperature": ["toce","thetao","temp", ...], ...})
-    and falls back to the canonical name if present.
-    """
-    # exact match first
-    if canon in ds.variables:
-        return canon
-
-    # alias match next
-    aliases = VARIABLE_ALIASES.get(canon, [])
-
-    for name in aliases:
-        if name in ds.variables:
-            return name
-
-    # fail loudly if we can't find a matching variable
-    available = list(ds.variables)
-    msg = (
-        f"Could not find a variable for '{canon}'. "
-        f"Checked aliases {aliases!r} and '{canon}'. "
-        f"Available in file: {available[:MAX_DISPLAYED_VARIABLES]}"
-        f"{'...' if len(available) > MAX_DISPLAYED_VARIABLES else ''}"
-    )
-    raise KeyError(msg)
-
-
-def _normalise_var_specs(
-    var_specs: VarSpec, file_cache: Dict[str, xr.Dataset], base: str
-) -> Dict[str, Dict[str, str]]:
-    """
-    Normalise variable specifications in yaml file.
-
-    Accepts either:
-      simple form:  {"temperature": "grid_T_3D.nc"}
-      rich form:    {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}}
-
-    Returns canonical mapping:
-      {canon: {"file": str, "var": str}}
-
-    The file_cache is used to avoid reopening the same dataset multiple times.
-    It is built up as the function processes each variable specification.
-
-    Parameters
-    ----------
-    var_specs : VarSpec
-        The variable specifications to normalise.
-    file_cache : Dict[str, xr.Dataset]
-        A cache of opened xarray datasets, keyed by file path.
-    base : str
-        The base directory for resolving relative file paths.
-
-    Returns
-    -------
-    Dict[str, Dict[str, str]]
-        A mapping of canonical variable names to their specifications.
-    """
-    normalised: Dict[str, Dict[str, str]] = {}
-    for canon, spec in var_specs.items():
-        if isinstance(spec, str):
-            # simple form → infer variable name
-            ds = _open_cached(file_cache, base, spec)
-            var_name = _infer_var_name(ds, canon)
-            normalised[canon] = {"file": spec, "var": var_name}
-
-        elif isinstance(spec, Mapping):
-            # rich form should include 'file' and 'var'
-            # the 'var' corresponds to the variable name in the dataset
-            # therefore we don't need to infer it
-            if "file" not in spec:
-                msg = f"Missing 'file' for variable '{canon}'."
-                raise ValueError(msg)
-            fname = str(spec["file"])
-            ds = _open_cached(file_cache, base, fname)
-
-            if "var" in spec:
-                var_name = str(spec["var"])  # user-specified → trust it
-            else:
-                var_name = _infer_var_name(ds, canon)
-
-            entry = {"file": fname, "var": var_name}
-            normalised[canon] = entry
-
-        else:
-            msg = f"Bad spec for '{canon}': {spec!r}"
-            raise TypeError(msg)
-
-    return normalised
 
 
 def _check_required_coords(
@@ -243,8 +150,6 @@ def load_grid_variables(
     """
     Build a dict of {canonical_name: DataArray} with a single open per file.
 
-    Supports simple and rich variable specs (see _normalise_var_specs).
-
     Parameters
     ----------
     base : str
@@ -259,22 +164,67 @@ def load_grid_variables(
     Dict[str, xr.DataArray]
         A dictionary mapping canonical variable names to their DataArray objects.
     """
-    norm = _normalise_var_specs(output_specs, files_cache, base)
-
     # Pull the arrays
     out: Dict[str, xr.DataArray] = {}
-    for canon, spec in norm.items():
+    for canon, spec in output_specs.items():
         ds = _open_cached(files_cache, base, spec["file"])
+        # Select specified variable
         out[canon] = ds[spec["var"]]
 
     return out
+
+
+def standardise_vars(
+    data: xr.DataArray | xr.Dataset, variable_map: VarMap
+) -> xr.DataArray | xr.Dataset:
+    """
+    Rename variables/coords/dims to the canonical field names.
+
+    The single variable in a DataArray is not renamed.
+    All variables in Datasets are renamed.
+    Coords are renamed in both DataArray and Dataset.
+    nav_lat and nav_lon are promoted to coordinates.
+
+    Parameters
+    ----------
+    data : xr.DataArray | xr.Dataset
+        Input data to be standardised.
+    variable_map : VarMap
+        Mapping of canonical field names and their variations for conversion.
+
+    Returns
+    -------
+    xr.DataArray | xr.Dataset
+        Standardised data, maintaining the same type as the input.
+    """
+    rename_map = {}
+    for std, aliases in variable_map.items():
+        for alias in aliases:
+            if hasattr(data, "variables") and alias in data.variables:
+                rename_map[alias] = std
+                break
+            if alias in data.coords:
+                rename_map[alias] = std
+                break
+
+    data = data.rename(rename_map)
+
+    # Promote nav_lat and nav_lon to coordinates to enable .sel() indexing.
+    # Previously, they were not inherited by dataarray subsets, causing thresholding
+    # to use integer indices instead of degrees.
+    # See PR [#76](https://github.com/m2lines/nemo-spinup-evaluation/pull/76
+    # for more details.
+    for name in ("nav_lat", "nav_lon"):
+        if name in data and name not in data.coords:
+            data = data.set_coords(name)  # zero-copy promotion to coordinate
+
+    return data
 
 
 def load_dino_data(
     mode: str,
     base: str,
     setup: Mapping[str, object],
-    do_standardise: bool = True,
 ) -> Dict[str, object]:
     """
     Load DINO data according to YAML setup.
@@ -287,8 +237,6 @@ def load_dino_data(
        The base directory for loading data files.
     setup : Mapping[str, object]
        A mapping containing the YAML configuration for data loading.
-    do_standardise : bool
-       Whether to standardise variable names using aliases.
 
     Returns
     -------
@@ -333,6 +281,7 @@ def load_dino_data(
     # restart (optional / controlled by mode)
     data["restart"] = None
     restart_hint = str(setup.get("restart_files") or "")
+
     if mode in ("restart", "both"):
         restart_path = get_restart_file_path(base, restart_hint)
         if restart_path is None:
@@ -344,37 +293,43 @@ def load_dino_data(
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
-    if mode in ("output", "both") and "output_variables" in setup:
-        var_specs: VarSpec = setup["output_variables"]  # simple or rich form accepted
-        # Load variables; this will populate a cache of files so
-        # we do not have to keep reopening files we already opened
+    if mode in ("output", "both"):
+        if "output_variables" not in setup:
+            msg = "Setup file missing output_variables section."
+            raise KeyError(msg)
+
+        # Load grid variables and store paths of each file loaded
+        var_specs = cast(VarSpec, setup["output_variables"])
+        data["grid"] = load_grid_variables(base, var_specs, files_cache)
+        paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
+
+        # Check grid variables for temporal alignment
+        _check_grid_time_alignment(data["grid"])
+
         restart_path = get_restart_file_path(base, restart_hint)
         if restart_path is None:
             msg = "No restart file found matching pattern."
             raise FileNotFoundError(msg)
         data["restart"] = xr.open_dataset(restart_path)
-        vars_map = load_grid_variables(base, var_specs, files_cache)
-        data["grid"].update(vars_map)
-
-        # Store the full paths to output files
-        paths["output_files"] = [os.path.join(base, relpath) for relpath in files_cache]
 
     # expose the file cache
     data["files"] = files_cache
     data["paths"] = paths
 
     # standardise names after loading has taken place
-    if do_standardise:
+    if "variable_map" in setup:
+        var_map = cast(VarMap, setup["variable_map"])
+
         # 1) mesh_mask
-        data["mesh_mask"] = standardise(data["mesh_mask"], VARIABLE_ALIASES)
+        data["mesh_mask"] = standardise_vars(data["mesh_mask"], var_map)
 
         # 2) restart if present
         if data["restart"] is not None:
-            data["restart"] = standardise(data["restart"], VARIABLE_ALIASES)
+            data["restart"] = standardise_vars(data["restart"], var_map)
 
         # 3) each requested variable DataArray
         data["grid"] = {
-            name: standardise(da, VARIABLE_ALIASES) for name, da in data["grid"].items()
+            name: standardise_vars(da, var_map) for name, da in data["grid"].items()
         }
 
     # Check for expected coordinates after all other processing
@@ -386,9 +341,5 @@ def load_dino_data(
 
     for name, da in data["grid"].items():
         _check_required_coords(da, ("time_counter", "nav_lat", "nav_lon"), name)
-
-    # Check that grid variables are temporally aligned
-    if data["grid"]:
-        _check_grid_time_alignment(data["grid"])
 
     return data

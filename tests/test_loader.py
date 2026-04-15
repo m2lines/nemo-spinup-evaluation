@@ -10,6 +10,7 @@ from nemo_spinup_evaluation.loader import (
     _check_required_coords,
     load_dino_data,
     load_grid_variables,
+    standardise_vars,
 )
 
 """
@@ -79,7 +80,7 @@ def test_load_dino_data_missing_restart_file(test_data_path, mode):
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
         "restart_files": "missing_restart",
-        "output_variables": {"temperature": "grid_T_3D.nc"},
+        "output_variables": {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}},
     }
 
     with pytest.raises(FileNotFoundError, match=r"restart file"):
@@ -94,7 +95,7 @@ def test_load_dino_data_missing_output_file(test_data_path, mode):
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
         "restart_files": "restart",
-        "output_variables": {"temperature": "missing.nc"},
+        "output_variables": {"temperature": {"file": "missing.nc", "var": "toce"}},
     }
 
     with pytest.raises(FileNotFoundError, match=r"missing.nc"):
@@ -105,7 +106,7 @@ def test_load_dino_data_missing_output_file(test_data_path, mode):
 def test_load_dino_data_modes(test_data_path, dino_setup, mode):
     """Test full load of DINO data in each mode."""
 
-    # Load data in restart mode
+    # Load data
     data = load_dino_data(mode, test_data_path, dino_setup)
 
     # Verify structure
@@ -150,7 +151,7 @@ def test_load_dino_data_nav_latlon_promotion(test_data_path, dino_setup, mode):
     """Test that nav_lat and nav_lon are promoted to coordinates."""
 
     # Load data in output mode
-    data = load_dino_data(mode, test_data_path, dino_setup, do_standardise=True)
+    data = load_dino_data(mode, test_data_path, dino_setup)
 
     assert isinstance(data["restart"], xr.Dataset)
     assert isinstance(data["restart"]["temperature"], xr.DataArray)
@@ -169,19 +170,18 @@ def test_load_dino_data_nav_latlon_promotion(test_data_path, dino_setup, mode):
     assert num_true == NUM_BELOW
 
 
-def test_load_grid_variables_simple_format(test_data_path):
-    """Test loading grid variables using simple format (variable: filename)."""
+def test_load_grid_variables(test_data_path):
+    """Test loading grid variables."""
 
-    # Simple format - just filename
-    simple_specs = {
-        "temperature": "grid_T_3D.nc",
-        "salinity": "grid_T_3D.nc",
-        "density": "grid_T_3D.nc",
-        "ssh": "grid_T_2D.nc",
+    grid_specs = {
+        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
+        "salinity": {"file": "grid_T_3D.nc", "var": "soce"},
+        "density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
     }
 
     files_cache = {}
-    grid_vars = load_grid_variables(str(test_data_path), simple_specs, files_cache)
+    grid_vars = load_grid_variables(str(test_data_path), grid_specs, files_cache)
 
     # Verify grid variable names and datasets
     assert isinstance(grid_vars, dict)
@@ -197,52 +197,21 @@ def test_load_grid_variables_simple_format(test_data_path):
     assert isinstance(grid_vars["ssh"], xr.DataArray)
 
 
-def test_load_grid_variables_rich_format(test_data_path):
-    """Test loading grid variables using rich format (variable: {file: .., var: ..})."""
-
-    # Rich format - explicit file and variable names
-    # Custom names are used to test that the explicit variable names
-    # are used instead of substitutions based on the key name
-    rich_specs = {
-        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
-        "custom_salinity": {"file": "grid_T_3D.nc", "var": "soce"},
-        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
-        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
-    }
-
-    files_cache = {}
-    grid_vars = load_grid_variables(str(test_data_path), rich_specs, files_cache)
-
-    # Verify grid variable names and datasets
-    assert isinstance(grid_vars, dict)
-
-    assert grid_vars["temperature"].name == "toce"
-    assert grid_vars["custom_salinity"].name == "soce"
-    assert grid_vars["custom_density"].name == "rhop"
-    assert grid_vars["ssh"].name == "ssh"
-
-    assert isinstance(grid_vars["temperature"], xr.DataArray)
-    assert isinstance(grid_vars["custom_salinity"], xr.DataArray)
-    assert isinstance(grid_vars["custom_density"], xr.DataArray)
-    assert isinstance(grid_vars["ssh"], xr.DataArray)
-
-
-def test_load_grid_variables_rich_format_missing_var(test_data_path):
+def test_load_grid_variables_missing_var(test_data_path):
     """
-    Test error handling for non-existent variables when loading grid in rich format.
+    Test error handling for non-existent variables when loading grid files.
     """
 
-    # Rich format - explicit file and variable names, some invalid
-    rich_specs = {
+    grid_specs = {
         "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
-        "custom_salinity": {"file": "grid_T_3D.nc", "var": "no_var"},
-        "custom_density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "salinity": {"file": "grid_T_3D.nc", "var": "no_var"},
+        "density": {"file": "grid_T_3D.nc", "var": "rhop"},
         "ssh": {"file": "grid_T_2D.nc", "var": "no_var"},
     }
 
     files_cache = {}
     with pytest.raises(KeyError, match=r"No variable named"):
-        load_grid_variables(str(test_data_path), rich_specs, files_cache)
+        load_grid_variables(str(test_data_path), grid_specs, files_cache)
 
 
 def test_check_required_coords():
@@ -273,15 +242,15 @@ def test_check_required_coords():
 def test_check_grid_time_alignment(test_data_path):
     """Test that _check_grid_time_alignment validates time_counters."""
 
-    grid_files = {
-        "temperature": "grid_T_3D.nc",
-        "salinity": "grid_T_3D.nc",
-        "density": "grid_T_3D.nc",
-        "ssh": "grid_T_2D.nc",
+    grid_specs = {
+        "temperature": {"file": "grid_T_3D.nc", "var": "toce"},
+        "salinity": {"file": "grid_T_3D.nc", "var": "soce"},
+        "density": {"file": "grid_T_3D.nc", "var": "rhop"},
+        "ssh": {"file": "grid_T_2D.nc", "var": "ssh"},
     }
 
     files_cache = {}
-    grid_vars = load_grid_variables(test_data_path, grid_files, files_cache)
+    grid_vars = load_grid_variables(test_data_path, grid_specs, files_cache)
 
     # Test data with correct temporal alignment
     _check_grid_time_alignment(grid_vars)
@@ -307,3 +276,65 @@ def test_check_grid_time_alignment(test_data_path):
 
     with pytest.raises(ValueError, match=r"ssh differ from temperature"):
         _check_grid_time_alignment(grid_vars)
+
+
+def test_standardise_vars(test_data_path, dino_setup):
+    """Test renaming of loaded variables."""
+
+    # Load all data (mode, both)
+    data = load_dino_data("both", test_data_path, dino_setup)
+
+    # Check that mesh mask variables were renamed
+    assert isinstance(data["mesh_mask"], xr.Dataset)
+    assert all(v in data["mesh_mask"] for v in ("time_counter", "depth"))
+
+    # Check that restart variables were renamed
+    assert isinstance(data["restart"], xr.Dataset)
+    assert all(
+        v in data["restart"]
+        for v in (
+            "velocity_u",
+            "velocity_v",
+            "temperature",
+            "salinity",
+            "density",
+            "ssh",
+        )
+    )
+
+    # Grid variables are not renamed
+    assert isinstance(data["grid"], dict)
+    assert data["grid"]["temperature"].name == "toce"
+
+
+def test_standardise_vars_nav_latlon():
+    """Test that nav_lat and nav_lon variables are renamed and promoted."""
+
+    # Simplified dataset with lat and lon as unexpected variables (not coords)
+    ds = xr.Dataset(
+        {
+            "temperature": (("time", "y", "x"), [[[0.0]]]),
+            "latitude": (("y", "x"), [[0.0]]),
+            "longitude": (("y", "x"), [[0.0]]),
+        },
+        coords={
+            "time": [0],
+        },
+    )
+
+    # Confirm pre-standardisation layout
+    assert "latitude" in ds.variables
+    assert "longitude" in ds.variables
+    assert "time" in ds.coords
+
+    var_map = {
+        "time_counter": ["time"],
+        "nav_lat": ["latitude"],
+        "nav_lon": ["longitude"],
+    }
+
+    ds_std = standardise_vars(ds, var_map)
+
+    assert "time_counter" in ds_std.coords
+    assert "nav_lat" in ds_std.coords
+    assert "nav_lon" in ds_std.coords
