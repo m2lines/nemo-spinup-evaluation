@@ -19,7 +19,7 @@ salinity
 density
 ```
 
-If NetCDF input files use different variable names to these then use the `variable_map` to remap them. All loaded files are remapped using the specified map. If input files use differing names for the same variable, list all names against each canonical field name, e.g.
+If the NetCDF mesh mask, restart or grid files use different variable names to these then use the `variable_map` to remap them. All loaded files are remapped using the specified map. If files use differing names for the same variable, list all names against each canonical field name, e.g.
 
 ```yaml
 variable_map:
