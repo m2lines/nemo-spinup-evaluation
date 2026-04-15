@@ -281,7 +281,7 @@ def compute_diffs_and_stats(
             continue
 
         try:
-            delta, abs_err, mae, rmse = _compute_means(val, ref_val)
+            delta, _abs_err, mae, rmse = _compute_means(val, ref_val)
 
             # keep names helpful
             delta = delta.rename(f"diff_{key}")
@@ -342,13 +342,11 @@ def main(argv=None) -> int:
     prefix: str = args.result_file_prefix
 
     # Load primary and (optional) reference datasets
-    data = load_dino_data(args.mode, args.sim_path, dino_setup, do_standardise=True)
+    data = load_dino_data(args.mode, args.sim_path, dino_setup)
 
     data_ref = None
     if args.ref_sim_path:
-        data_ref = load_dino_data(
-            args.mode, args.ref_sim_path, dino_setup, do_standardise=True
-        )
+        data_ref = load_dino_data(args.mode, args.ref_sim_path, dino_setup)
 
     # Extract paths with proper type cast
     paths = cast(dict[str, str], data.get("paths", {}))

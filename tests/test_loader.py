@@ -10,6 +10,7 @@ from nemo_spinup_evaluation.loader import (
     _check_required_coords,
     load_dino_data,
     load_grid_variables,
+    standardise_vars,
 )
 
 """
@@ -105,7 +106,7 @@ def test_load_dino_data_missing_output_file(test_data_path, mode):
 def test_load_dino_data_modes(test_data_path, dino_setup, mode):
     """Test full load of DINO data in each mode."""
 
-    # Load data in restart mode
+    # Load data
     data = load_dino_data(mode, test_data_path, dino_setup)
 
     # Verify structure
@@ -150,7 +151,7 @@ def test_load_dino_data_nav_latlon_promotion(test_data_path, dino_setup, mode):
     """Test that nav_lat and nav_lon are promoted to coordinates."""
 
     # Load data in output mode
-    data = load_dino_data(mode, test_data_path, dino_setup, do_standardise=True)
+    data = load_dino_data(mode, test_data_path, dino_setup)
 
     assert isinstance(data["restart"], xr.Dataset)
     assert isinstance(data["restart"]["temperature"], xr.DataArray)
@@ -275,3 +276,65 @@ def test_check_grid_time_alignment(test_data_path):
 
     with pytest.raises(ValueError, match=r"ssh differ from temperature"):
         _check_grid_time_alignment(grid_vars)
+
+
+def test_standardise_vars(test_data_path, dino_setup):
+    """Test renaming of loaded variables."""
+
+    # Load all data (mode, both)
+    data = load_dino_data("both", test_data_path, dino_setup)
+
+    # Check that mesh mask variables were renamed
+    assert isinstance(data["mesh_mask"], xr.Dataset)
+    assert all(v in data["mesh_mask"] for v in ("time_counter", "depth"))
+
+    # Check that restart variables were renamed
+    assert isinstance(data["restart"], xr.Dataset)
+    assert all(
+        v in data["restart"]
+        for v in (
+            "velocity_u",
+            "velocity_v",
+            "temperature",
+            "salinity",
+            "density",
+            "ssh",
+        )
+    )
+
+    # Grid variables are not renamed
+    assert isinstance(data["grid"], dict)
+    assert data["grid"]["temperature"].name == "toce"
+
+
+def test_standardise_vars_nav_latlon():
+    """Test that nav_lat and nav_lon variables are renamed and promoted."""
+
+    # Simplified dataset with lat and lon as unexpected variables (not coords)
+    ds = xr.Dataset(
+        {
+            "temperature": (("time", "y", "x"), [[[0.0]]]),
+            "latitude": (("y", "x"), [[0.0]]),
+            "longitude": (("y", "x"), [[0.0]]),
+        },
+        coords={
+            "time": [0],
+        },
+    )
+
+    # Confirm pre-standardisation layout
+    assert "latitude" in ds.variables
+    assert "longitude" in ds.variables
+    assert "time" in ds.coords
+
+    var_map = {
+        "time_counter": ["time"],
+        "nav_lat": ["latitude"],
+        "nav_lon": ["longitude"],
+    }
+
+    ds_std = standardise_vars(ds, var_map)
+
+    assert "time_counter" in ds_std.coords
+    assert "nav_lat" in ds_std.coords
+    assert "nav_lon" in ds_std.coords

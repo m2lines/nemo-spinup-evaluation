@@ -7,9 +7,8 @@ from typing import Dict, Mapping, Optional, cast
 
 import xarray as xr
 
-from nemo_spinup_evaluation.standardise_inputs import VARIABLE_ALIASES, standardise
-
 VarSpec = Mapping[str, Mapping[str, str]]
+VarMap = Mapping[str, list[str]]
 
 
 def _open_cached(cache: Dict[str, xr.Dataset], base: str, relpath: str) -> xr.Dataset:
@@ -175,11 +174,57 @@ def load_grid_variables(
     return out
 
 
+def standardise_vars(
+    data: xr.DataArray | xr.Dataset, variable_map: VarMap
+) -> xr.DataArray | xr.Dataset:
+    """
+    Rename variables/coords/dims to the canonical field names.
+
+    The single variable in a DataArray is not renamed.
+    All variables in Datasets are renamed.
+    Coords are renamed in both DataArray and Dataset.
+    nav_lat and nav_lon are promoted to coordinates.
+
+    Parameters
+    ----------
+    data : xr.DataArray | xr.Dataset
+        Input data to be standardised.
+    variable_map : VarMap
+        Mapping of canonical field names and their variations for conversion.
+
+    Returns
+    -------
+    xr.DataArray | xr.Dataset
+        Standardised data, maintaining the same type as the input.
+    """
+    rename_map = {}
+    for std, aliases in variable_map.items():
+        for alias in aliases:
+            if hasattr(data, "variables") and alias in data.variables:
+                rename_map[alias] = std
+                break
+            if alias in data.coords:
+                rename_map[alias] = std
+                break
+
+    data = data.rename(rename_map)
+
+    # Promote nav_lat and nav_lon to coordinates to enable .sel() indexing.
+    # Previously, they were not inherited by dataarray subsets, causing thresholding
+    # to use integer indices instead of degrees.
+    # See PR [#76](https://github.com/m2lines/nemo-spinup-evaluation/pull/76
+    # for more details.
+    for name in ("nav_lat", "nav_lon"):
+        if name in data and name not in data.coords:
+            data = data.set_coords(name)  # zero-copy promotion to coordinate
+
+    return data
+
+
 def load_dino_data(
     mode: str,
     base: str,
     setup: Mapping[str, object],
-    do_standardise: bool = True,
 ) -> Dict[str, object]:
     """
     Load DINO data according to YAML setup.
@@ -192,8 +237,6 @@ def load_dino_data(
        The base directory for loading data files.
     setup : Mapping[str, object]
        A mapping containing the YAML configuration for data loading.
-    do_standardise : bool
-       Whether to standardise variable names using aliases.
 
     Returns
     -------
@@ -274,17 +317,19 @@ def load_dino_data(
     data["paths"] = paths
 
     # standardise names after loading has taken place
-    if do_standardise:
+    if "variable_map" in setup:
+        var_map = cast(VarMap, setup["variable_map"])
+
         # 1) mesh_mask
-        data["mesh_mask"] = standardise(data["mesh_mask"], VARIABLE_ALIASES)
+        data["mesh_mask"] = standardise_vars(data["mesh_mask"], var_map)
 
         # 2) restart if present
         if data["restart"] is not None:
-            data["restart"] = standardise(data["restart"], VARIABLE_ALIASES)
+            data["restart"] = standardise_vars(data["restart"], var_map)
 
         # 3) each requested variable DataArray
         data["grid"] = {
-            name: standardise(da, VARIABLE_ALIASES) for name, da in data["grid"].items()
+            name: standardise_vars(da, var_map) for name, da in data["grid"].items()
         }
 
     # Check for expected coordinates after all other processing

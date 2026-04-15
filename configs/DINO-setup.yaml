@@ -23,3 +23,12 @@ output_variables:
   velocity_v:
     file: grid_V_3D.nc
     var: voce
+
+variable_map:
+  temperature: [tn]
+  velocity_u: [un]
+  velocity_v: [vn]
+  depth: [nav_lev, deptht, depthu, depthv]
+  ssh: [sshn]
+  salinity: [sn]
+  density: [rhop]
