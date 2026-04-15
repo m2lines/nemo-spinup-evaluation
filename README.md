@@ -125,7 +125,6 @@ NEMO Spinup-Evaluation is often used alongside [spinup-forecast](https://github.
 │       ├── loader.py               Data loading and preprocessing utilities
 │       ├── metrics_io.py           Output helpers (CSV writing, formatting)
 │       ├── metrics.py              Metric calculation functions
-│       ├── standardise_inputs.py   Input standardization helpers
 │       └── utils.py                General utilities
 ├── tests/                          Test suite, test data, and data download scripts
 │   └── get-data.sh                 Script to fetch test data from THREDDS
