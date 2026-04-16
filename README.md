@@ -51,10 +51,11 @@ Requires Python ≥ 3.10
 
 ## Quick Start
 
-Download the example DINO dataset from Zenodo:
+Download the example DINO dataset from [Zenodo](https://zenodo.org/records/19557419):
 
 ```sh
-# TODO: add Zenodo download link and instructions once dataset is published
+wget https://zenodo.org/records/19557419/files/50.zip
+unzip 50.zip -d data/
 ```
 
 Then run the evaluation against the example data:
@@ -202,22 +203,22 @@ restart_files: 'restart'
 
 output_variables:
   temperature:
-    file: grid_T_3D.nc
+    file: DINO_1y_grid_T.nc
     var: toce
   salinity:
-    file: grid_T_3D.nc
+    file: DINO_1y_grid_T.nc
     var: soce
   density:
-    file: grid_T_3D.nc
+    file: DINO_1y_grid_T.nc
     var: rhop
   ssh:
-    file: grid_T_2D.nc
+    file: DINO_1m_To_1y_grid_T.nc
     var: ssh
   velocity_u:
-    file: grid_U_3D.nc
+    file: DINO_1y_grid_U.nc
     var: uoce
   velocity_v:
-    file: grid_V_3D.nc
+    file: DINO_1y_grid_V.nc
     var: voce
 
 variable_map:
