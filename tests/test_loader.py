@@ -36,7 +36,7 @@ def test_data_path() -> Path:
 @pytest.fixture
 def dino_setup():
     """Fixture to load the DINO setup configuration."""
-    config_path = Path("configs/DINO-setup.yaml")
+    config_path = Path("tests/DINO-test-setup.yaml")
     with config_path.open("r") as f:
         return yaml.safe_load(f)
 

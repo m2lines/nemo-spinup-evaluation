@@ -92,6 +92,8 @@ def test_integration_with_real_data(real_input_dir, output_file_path, run):
         "both",
         "--results-dir",
         str(output_file_path),
+        "--config",
+        "tests/DINO-test-setup.yaml",
     ]
 
     if run == "with_ref":
