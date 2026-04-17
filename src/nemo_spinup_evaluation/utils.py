@@ -40,7 +40,7 @@ def get_depth(restart, mask):
     return deptht
 
 
-def get_density(thetao, so, depth, tmask):  # noqa: PLR0915
+def get_density(thetao, so, depth, tmask):
     """
     Compute potential density referenced at the surface and density anomaly.
 

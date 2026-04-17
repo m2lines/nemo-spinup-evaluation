@@ -72,7 +72,7 @@ extend-select = ["D417"]
 # Ignore SIM108 (use ternary instead of if-else) as I think it can obscure intent.
 # Ignore RUF002 (ambiguous characters) as it does not allow apostrophes in strings.
 # Ignore PLR0913 (too many arguments) will be addressed eventually.
-ignore = ["SIM108", "RUF002", "PLR0913"]
+ignore = ["SIM108", "RUF002", "PLR0913", "PLR0912", "PLR0915"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
