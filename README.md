@@ -54,7 +54,13 @@ Requires Python ≥ 3.10
 Download the example DINO dataset from Zenodo:
 
 ```sh
-# TODO: add Zenodo download link and instructions once dataset is published
+# Download the 50-year baseline dataset (551.6 MB)
+wget https://zenodo.org/records/19474414/files/50.zip
+unzip 50.zip
+
+# For more comprehensive testing, you can also download:
+# 200-year dataset (2.1 GB): wget https://zenodo.org/records/19474414/files/200.zip
+# Restart files (6.5 GB): wget https://zenodo.org/records/19474414/files/restart.zip
 ```
 
 Then run the evaluation against the example data:
@@ -257,6 +263,20 @@ A separate file with MAE and RMSE statistics is also generated if a reference di
 
 Add new metric functions to `src/nemo_spinup_evaluation/metrics.py` and update the metric function lists in `cli.py` as needed.
 
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to contribute to this project, including:
+
+- How to report bugs and suggest enhancements
+- Development setup and coding guidelines
+- Testing procedures
+- How to add new metrics
+- Release process
+
+## Code of Conduct
+
+This project follows a [Code of Conduct](CODE_OF_CONDUCT.md) to ensure a welcoming and inclusive community. All contributors are expected to follow these guidelines.
 
 ## Acknowledgements
 
