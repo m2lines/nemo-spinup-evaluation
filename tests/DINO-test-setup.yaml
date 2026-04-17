@@ -1,4 +1,5 @@
-# DINO-setup.yaml
+# DINO-test-setup.yaml
+# Test config matching the subsampled test data file names in tests/data/
 
 mesh_mask: mesh_mask.nc
 
@@ -6,22 +7,22 @@ restart_files: 'restart'
 
 output_variables:
   temperature:
-    file: DINO_1y_grid_T.nc
+    file: grid_T_3D.nc
     var: toce
   salinity:
-    file: DINO_1y_grid_T.nc
+    file: grid_T_3D.nc
     var: soce
   density:
-    file: DINO_1y_grid_T.nc
+    file: grid_T_3D.nc
     var: rhop
   ssh:
-    file: DINO_1m_To_1y_grid_T.nc
+    file: grid_T_2D.nc
     var: ssh
   velocity_u:
-    file: DINO_1y_grid_U.nc
+    file: grid_U_3D.nc
     var: uoce
   velocity_v:
-    file: DINO_1y_grid_V.nc
+    file: grid_V_3D.nc
     var: voce
 
 variable_map:
