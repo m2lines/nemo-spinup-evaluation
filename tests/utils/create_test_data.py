@@ -1,22 +1,24 @@
+"""Prune restart.nc and mesh_mask.nc into the A/B fixture dirs.
+
+Time-evolving grid files (grid_T_2D, grid_T_3D, grid_U_3D, grid_V_3D) are
+handled by CDO in build_fixtures.sh — this script only handles the two files
+that have no meaningful time axis to slice/shift.
+
+restart.nc gets a deterministic Gaussian-noise variant in the B dir so that
+diff-mode comparisons have something to do.
+
+Usage:
+    python tests/utils/create_test_data.py SRC_DIR DST_A DST_B
+
+SRC_DIR must contain restart.nc and mesh_mask.nc.
+"""
+
+import argparse
 from pathlib import Path
 
+import numpy as np
 import xarray as xr
 
-# Source and destination directories
-src_dir = Path("tests/data/DINO")
-dst_dir = Path("tests/data/DINO_subsampled_3")
-dst_dir.mkdir(exist_ok=True)
-
-files = [
-    "grid_T_3D.nc",
-    "grid_T_2D.nc",
-    "grid_U_3D.nc",
-    "grid_V_3D.nc",
-    "mesh_mask.nc",
-    "restart.nc",
-]
-
-# Variables to keep in restart.nc
 restart_vars_to_keep = [
     "nav_lon",
     "nav_lat",
@@ -29,7 +31,6 @@ restart_vars_to_keep = [
     "rhop",
     "sshn",
 ]
-
 
 mesh_mask_vars_to_keep = [
     "e1t",
@@ -49,30 +50,58 @@ mesh_mask_vars_to_keep = [
 ]
 
 
-for fname in files:
-    src_file = src_dir / fname
-    dst_file = dst_dir / fname
-    if not src_file.exists():
-        print(f"File {src_file} not found, skipping.")
-        continue
+def add_noise(ds, exclude_vars=None, noise_level=1e-3, seed=42):
+    """Add small deterministic Gaussian noise to numeric data variables."""
+    rng = np.random.default_rng(seed)
+    exclude_vars = set(exclude_vars or [])
+    ds_out = ds.copy()
+    for v in ds.data_vars:
+        if v in exclude_vars:
+            continue
+        arr = ds[v].values
+        if not np.issubdtype(arr.dtype, np.number):
+            continue
+        scale = np.nanstd(arr)
+        if not np.isfinite(scale) or scale == 0:
+            scale = 1.0
+        noise = rng.normal(0.0, noise_level * scale, size=arr.shape)
+        ds_out[v] = xr.DataArray(
+            arr + noise, dims=ds[v].dims, attrs=ds[v].attrs, name=v
+        )
+    return ds_out
 
-    ds = xr.open_dataset(src_file)
-    if fname == "restart.nc":
-        # Only keep selected variables
-        vars_present = [v for v in restart_vars_to_keep if v in ds.variables]
-        ds = ds[vars_present]
-        # No time subsampling needed if only one time point
-    elif fname == "mesh_mask.nc":
-        vars_present = [v for v in mesh_mask_vars_to_keep if v in ds.variables]
-        ds = ds[vars_present]
-    # Subsample first 2 time steps if time or time_counter exists
-    elif "time" in ds.dims:
-        ds = ds.isel(time=slice(0, 2))
-    elif "time_counter" in ds.dims:
-        ds = ds.isel(time_counter=slice(0, 2))
-        # else: no time dimension, copy as is
 
-    ds.to_netcdf(dst_file)
-    print(f"Processed {fname} written to {dst_file}")
+def _subset(src, vars_to_keep):
+    ds = xr.open_dataset(src)
+    present = [v for v in vars_to_keep if v in ds.variables]
+    return ds[present]
 
-print("Subsampling and variable selection complete.")
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("src_dir", type=Path)
+    p.add_argument("dst_a", type=Path)
+    p.add_argument("dst_b", type=Path)
+    args = p.parse_args()
+
+    args.dst_a.mkdir(parents=True, exist_ok=True)
+    args.dst_b.mkdir(parents=True, exist_ok=True)
+
+    # mesh_mask: identical in both dirs
+    mesh = _subset(args.src_dir / "mesh_mask.nc", mesh_mask_vars_to_keep)
+    mesh.to_netcdf(args.dst_a / "mesh_mask.nc")
+    mesh.to_netcdf(args.dst_b / "mesh_mask.nc")
+    print(f"wrote mesh_mask.nc to {args.dst_a} and {args.dst_b}")
+
+    # restart: clean -> A, noisy -> B
+    restart = _subset(args.src_dir / "restart.nc", restart_vars_to_keep)
+    restart.to_netcdf(args.dst_a / "restart.nc")
+    add_noise(
+        restart,
+        exclude_vars={"nav_lon", "nav_lat", "nav_lev", "time_counter"},
+    ).to_netcdf(args.dst_b / "restart.nc")
+    print(f"wrote restart.nc (clean) to {args.dst_a} and (noisy) to {args.dst_b}")
+
+
+if __name__ == "__main__":
+    main()
