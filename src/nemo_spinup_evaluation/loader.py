@@ -1,9 +1,8 @@
 """Functions to load NEMO model output and restart files based on YAML configuration."""
 
-import glob
 import os
 from pathlib import Path
-from typing import Dict, Mapping, Optional, cast
+from typing import Dict, Mapping, cast
 
 import xarray as xr
 
@@ -87,16 +86,16 @@ def _check_grid_time_alignment(grid_data: Mapping[str, xr.DataArray | xr.Dataset
             raise ValueError(msg)
 
 
-def resolve_mesh_mask(mesh_mask: str, sim_path: str) -> Path:
-    """Resolve the mesh mask path, handling absolute and relative paths."""
-    p = Path(mesh_mask)
-    candidate = p if p.is_absolute() else Path(sim_path) / mesh_mask
-    if not candidate.exists():
+def resolve_file_path(file_name: str, sim_path: str) -> Path:
+    """Resolve a file path, handling absolute and relative paths."""
+    p = Path(file_name)
+    candidate = p if p.is_absolute() else Path(sim_path) / file_name
+    if not candidate.is_file():
         hint = (
-            "Set `mesh_mask` to an absolute path in your YAML, "
-            "or ensure it exists under --sim-path."
+            "Ensure `mesh_mask` and `restart` exist under --sim-path, "
+            "or use absolute paths in your YAML."
         )
-        msg = f"Mesh mask file not found: {candidate}. {hint}"
+        msg = f"File not found: {candidate}. {hint}"
         raise FileNotFoundError(msg)
 
     return candidate
@@ -114,34 +113,6 @@ def load_mesh_mask(path: Path) -> xr.Dataset:
         msg = f"Mesh mask file {path} is missing required variables: {missing}"
         raise ValueError(msg)
     return ds
-
-
-def get_restart_file_path(base: str, restart_hint: Optional[str]) -> Optional[str]:
-    """
-    Get the restart file path based on base directory and hint.
-
-    If restart_hint ends with '.nc', it is treated as a direct file name.
-    Otherwise, we search for files matching '*{hint}*.nc' in the base directory.
-
-    Parameters
-    ----------
-    base : str
-        The base directory to search for restart files.
-    restart_hint : Optional[str]
-        An optional hint for the restart file name (e.g., 'restart').
-
-    Returns
-    -------
-    Optional[str]
-        The path to the restart file if found, otherwise None.
-    """
-    if restart_hint and restart_hint.endswith(".nc"):
-        candidate = os.path.join(base, restart_hint)
-        return candidate if os.path.exists(candidate) else None
-
-    pattern_core = restart_hint if restart_hint else "restart"
-    matches = sorted(glob.glob(os.path.join(base, f"*{pattern_core}*.nc")))
-    return matches[0] if matches else None
 
 
 def load_grid_variables(
@@ -274,22 +245,18 @@ def load_dino_data(
         raise ValueError(msg)
 
     # Resolve mesh mask path
-    mesh_mask_path = resolve_mesh_mask(str(setup["mesh_mask"]), base)
+    mesh_mask_path = resolve_file_path(str(setup["mesh_mask"]), base)
     paths["mesh_mask"] = str(mesh_mask_path)
     data["mesh_mask"] = load_mesh_mask(mesh_mask_path)
 
     # restart (optional / controlled by mode)
     data["restart"] = None
-    restart_hint = str(setup.get("restart_files") or "")
+    restart_file = str(setup.get("restart") or "")
 
     if mode in ("restart", "both"):
-        restart_path = get_restart_file_path(base, restart_hint)
-        if restart_path is None:
-            msg = "No restart file found matching pattern."
-            raise FileNotFoundError(msg)
-        else:
-            paths["restart"] = restart_path
-            data["restart"] = xr.open_dataset(restart_path)
+        restart_path = resolve_file_path(restart_file, base)
+        paths["restart"] = restart_path
+        data["restart"] = xr.open_dataset(restart_path)
 
     # outputs (optional / controlled by mode)
     data["grid"] = {}
@@ -306,11 +273,11 @@ def load_dino_data(
         # Check grid variables for temporal alignment
         _check_grid_time_alignment(data["grid"])
 
-        restart_path = get_restart_file_path(base, restart_hint)
-        if restart_path is None:
-            msg = "No restart file found matching pattern."
-            raise FileNotFoundError(msg)
-        data["restart"] = xr.open_dataset(restart_path)
+        # Restart file is optional in output mode
+        if mode == "output" and restart_file:
+            restart_path = resolve_file_path(restart_file, base)
+            paths["restart"] = restart_path
+            data["restart"] = xr.open_dataset(restart_path)
 
     # expose the file cache
     data["files"] = files_cache

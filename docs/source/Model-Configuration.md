@@ -40,7 +40,7 @@ variable_map:
 ```yaml
 mesh_mask: mesh_mask.nc
 
-restart_files: 'restart'
+restart: restart.nc
 
 output_variables:
   temperature:
