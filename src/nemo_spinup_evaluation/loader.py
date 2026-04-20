@@ -239,7 +239,7 @@ def load_dino_data(
         "output_files": [],
     }
 
-    # mesh mask (required)
+    # 1. Mesh mask (required)
     if "mesh_mask" not in setup:
         msg = "setup must specify 'mesh_mask'."
         raise ValueError(msg)
@@ -249,16 +249,18 @@ def load_dino_data(
     paths["mesh_mask"] = str(mesh_mask_path)
     data["mesh_mask"] = load_mesh_mask(mesh_mask_path)
 
-    # restart (optional / controlled by mode)
+    # 2. Restart file (optional in output mode)
     data["restart"] = None
     restart_file = str(setup.get("restart") or "")
 
-    if mode in ("restart", "both"):
+    # Restart file is required in modes, restart and both
+    # Only attempt load in output mode if restart is present in config
+    if mode in ("restart", "both") or (mode == "output" and restart_file):
         restart_path = resolve_file_path(restart_file, base)
         paths["restart"] = restart_path
         data["restart"] = xr.open_dataset(restart_path)
 
-    # outputs (optional / controlled by mode)
+    # 3. Output files (optional in restart mode)
     data["grid"] = {}
     if mode in ("output", "both"):
         if "output_variables" not in setup:
@@ -273,17 +275,11 @@ def load_dino_data(
         # Check grid variables for temporal alignment
         _check_grid_time_alignment(data["grid"])
 
-        # Restart file is optional in output mode
-        if mode == "output" and restart_file:
-            restart_path = resolve_file_path(restart_file, base)
-            paths["restart"] = restart_path
-            data["restart"] = xr.open_dataset(restart_path)
-
     # expose the file cache
     data["files"] = files_cache
     data["paths"] = paths
 
-    # standardise names after loading has taken place
+    # 4. Standardise names after loading has taken place
     if "variable_map" in setup:
         var_map = cast(VarMap, setup["variable_map"])
 
@@ -299,7 +295,7 @@ def load_dino_data(
             name: standardise_vars(da, var_map) for name, da in data["grid"].items()
         }
 
-    # Check for expected coordinates after all other processing
+    # 5. Check for expected coordinates after all other processing
     required_coords = ("time_counter", "depth", "nav_lat", "nav_lon")
     _check_required_coords(data["mesh_mask"], required_coords, "mesh mask")
 

@@ -87,6 +87,20 @@ def test_load_dino_data_missing_restart_file(test_data_path, mode):
         load_dino_data(mode, test_data_path, bad_setup)
 
 
+def test_load_dino_data_no_restart_output_mode(test_data_path):
+    """Test that restart file is optional in output mode."""
+
+    # Setup with no restart entry
+    setup = {
+        "mesh_mask": "mesh_mask.nc",
+        "output_variables": {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}},
+        "variable_map": {"depth": ["nav_lev"]},
+    }
+
+    data = load_dino_data("output", test_data_path, setup)
+    assert data["restart"] is None
+
+
 @pytest.mark.parametrize("mode", ["output", "both"])
 def test_load_dino_data_missing_output_file(test_data_path, mode):
     """Test error handling when output file is missing."""
