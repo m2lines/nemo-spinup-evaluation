@@ -55,16 +55,16 @@ def test_load_dino_data_missing_mesh_mask(test_data_path, mode):
     # Setup with missing mesh_mask file
     bad_setup = {
         "mesh_mask": "missing_mesh_mask.nc",
-        "restart_files": "restart.nc",
+        "restart": "restart.nc",
         "output_variables": {"temperature": "grid_T_3D.nc"},
     }
 
-    with pytest.raises(FileNotFoundError, match=r"Mesh mask"):
+    with pytest.raises(FileNotFoundError, match=r"mesh_mask"):
         load_dino_data(mode, test_data_path, bad_setup)
 
     # Setup without mesh_mask
     bad_setup = {
-        "restart_files": "restart",
+        "restart": "restart.nc",
         "output_variables": {"temperature": "grid_T_3D.nc"},
     }
 
@@ -79,12 +79,26 @@ def test_load_dino_data_missing_restart_file(test_data_path, mode):
     # Setup with non-existent restart file
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
-        "restart_files": "missing_restart",
+        "restart": "missing_restart.nc",
         "output_variables": {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}},
     }
 
-    with pytest.raises(FileNotFoundError, match=r"restart file"):
+    with pytest.raises(FileNotFoundError, match=r"restart"):
         load_dino_data(mode, test_data_path, bad_setup)
+
+
+def test_load_dino_data_no_restart_output_mode(test_data_path):
+    """Test that restart file is optional in output mode."""
+
+    # Setup with no restart entry
+    setup = {
+        "mesh_mask": "mesh_mask.nc",
+        "output_variables": {"temperature": {"file": "grid_T_3D.nc", "var": "toce"}},
+        "variable_map": {"depth": ["nav_lev"]},
+    }
+
+    data = load_dino_data("output", test_data_path, setup)
+    assert data["restart"] is None
 
 
 @pytest.mark.parametrize("mode", ["output", "both"])
@@ -94,7 +108,7 @@ def test_load_dino_data_missing_output_file(test_data_path, mode):
     # Setup with non-existent output file
     bad_setup = {
         "mesh_mask": "mesh_mask.nc",
-        "restart_files": "restart",
+        "restart": "restart.nc",
         "output_variables": {"temperature": {"file": "missing.nc", "var": "toce"}},
     }
 
